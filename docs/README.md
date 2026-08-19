@@ -14,6 +14,7 @@ here (or to `results/runs.csv`), it doesn't go in the paper.
 | [`INTERFACE.md`](INTERFACE.md) | Frozen contracts | Exact signatures, array shapes, and dtypes for the model interface, the aggregator interface, and the federated loop's call contract. Update only when the frozen contract itself changes (rare, deliberate) — not for every new arm built against it. |
 | [`../RUNNING.md`](../RUNNING.md) | Operational reference | For every component: the exact command to run it, the expected output, and known failure signatures. Lives at the repo root (not in `docs/`) since it's the first thing anyone reproducing the pipeline needs. |
 | [`reference/`](reference/) | External planning documents | Materials produced outside this repo during planning — dataset brief, quantum primer, literature summaries, Review-1 materials, Review-2 criteria. Added as they're brought in; each gets a line here once present. |
+| [`reference/fl_fairness_literature.md`](reference/fl_fairness_literature.md) | FL fairness / worst-client disparity literature | 5 papers on FL fairness and client-level performance disparity, cited in `paper/02_related_work.md`. Flags that our worst-client-vs-global-accuracy pattern is not a novel finding — closest match: Naseer & Shoaib, arXiv:2605.08992. |
 
 ## Commit convention
 

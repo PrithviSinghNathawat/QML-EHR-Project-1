@@ -668,3 +668,77 @@ supported. Full row-by-row verdict in the diagnostic report, Section 6-7.
 the task instruction.
 
 ---
+
+## D-029 · 2026-08-20 — Worst-client/global-accuracy gap is not a novel finding; literature grounding required (Ayuvi)
+
+**What:** Literature search on FL fairness / client-level performance disparity under
+non-IID data. Full summary: `docs/reference/fl_fairness_literature.md`. 5 papers cited
+in `paper/02_related_work.md`: Mohri et al. (ICML 2019, agnostic FL), Li et al. (ICLR
+2020, q-FFL), Li et al. (MLSys 2020, FedProx -- also our own Arm 3 baseline), Liu
+(arXiv:2507.12983, 2025, FedGA), and Naseer & Shoaib (arXiv:2605.08992, 2026).
+
+**Why this matters for the paper, explicitly:** Naseer & Shoaib (2026) already report
+the same qualitative pattern D-028 found -- global/mean accuracy insulated from damage
+that concentrates in worst-client accuracy, worsening sharply under increasing
+heterogeneity -- via a controlled label-skew sweep, on a text-classification task. We
+must not present "worst-client accuracy degrades while global accuracy stays flat" as
+this project's discovery. The paper's contribution has to be framed as (a) confirming
+this pattern on EHR tabular data rather than text, and (b) extending the comparison to
+a variational quantum classifier vs. classical models, which none of the 5 cited papers
+address.
+
+**Alternatives rejected:** presenting D-028's finding without literature grounding was
+not seriously considered -- `CLAUDE.md` requires citing prior work rather than claiming
+an established phenomenon as a discovery, and the diagnostic report itself flagged this
+as an open question for the literature to resolve.
+
+---
+
+## D-030 · 2026-08-20 — `plots.py` figure design: data source, worst-client definition, natural-partition presentation (Ayuvi)
+
+**What:** Built `scripts/plots.py`, producing the three primary-result figures
+(worst-client accuracy vs. alpha, global accuracy vs. alpha, client divergence vs.
+alpha) at dpi=200, plus the shared-axes pairing between the first two figures.
+
+**Data source:** built against `results/diagnostic_results.csv` and
+`results/diagnostic_divergence.csv`, not `results/runs.csv`. `runs.csv` only has one
+global-accuracy row per run -- no per-client breakdown -- so it cannot drive a
+worst-client figure. The diagnostic CSVs have the required `client` and `round`
+granularity. Extending to Arm 4/5 later means adding their results file paths to
+`RESULTS_SOURCES`/`DIVERGENCE_SOURCES` at the top of the file, provided the new CSV
+reuses the same long-format columns; a missing source file is skipped with a warning,
+not a crash, verified by testing with a nonexistent `results/runs_arm4.csv` path added.
+
+**Worst-client accuracy definition:** minimum accuracy across a run's non-`global`
+`client` rows, per (arm, model, condition, seed, fold) replicate, then mean/std across
+replicates for the error band. This uses all seed x fold replicates (up to 50) as the
+error-band source, not only the 10 seeds -- a superset of what the task asked for, on
+the reasoning that more replicates is strictly more informative for the same
+error-band purpose; flagged here as a deviation from the literal instruction ("error
+bands from the 10 seeds") in case that specific replicate count matters for the paper's
+methodology section.
+
+**Arm 1 is structurally absent from the global-accuracy figure:** it has per-client
+alpha-conditioned rows (used in the worst-client figure, since the diagnostic session
+also evaluated the centralized model on each Dirichlet client's local test slice, as a
+"would federation even help" baseline) but no alpha-conditioned *global*-accuracy rows
+-- its global accuracy doesn't depend on how the test set happens to be partitioned
+into clients. An early version of this script plotted an empty, misleading legend entry
+for Arm 1 there; fixed by skipping any series with zero rows after alpha-filtering
+before it reaches the legend.
+
+**Natural-partition reference line placed in the legend, not as inline text:** an
+earlier version annotated each series' natural-partition value with floating text next
+to its horizontal reference line. With 4 series clustered close together (worst-client
+figure), the text overlapped illegibly and ran past the axes edge at alpha=0.1
+(colliding with the real alpha=0.1 data point). Moved to a labeled legend entry per
+series instead -- more entries in the legend, but every one is readable.
+
+**Consistent series color across the figure pair:** matplotlib's default color cycling
+is per-axes, so when Arm 1 drops out of the global-accuracy figure, Arm 2 would have
+been reassigned Arm 1's former colors there -- breaking the "one figure moves, one
+doesn't, compare them directly" point of the pairing. Fixed with an explicit color map
+built once from the full (arm, model) key set before any alpha-filtering, reused across
+both figures.
+
+---
