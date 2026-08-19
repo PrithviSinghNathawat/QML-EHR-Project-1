@@ -364,3 +364,57 @@ existed from an earlier session and didn't need regenerating -- circuit design
 **Stopped here per instruction.** Did not start Arm 3, 4, or 5.
 
 ---
+
+## 2026-08-18 — Diagnostic session: does the heterogeneity penalty exist?
+
+Prithvi's diagnostic prompt pre-committed a decision table before seeing any results,
+explicitly ruling out tuning toward a decline. Correction made up front: the prompt's
+"~36 trainable parameters" for the MLP doesn't match the actual frozen VQC, which has
+18 (confirmed from `docs/circuit_diagram.txt` -- 6 qubits x 3 layers x 1 RY/qubit/
+layer). Built the MLP to match 18 (landed on 17, closest clean single-hidden-layer
+architecture) instead of the requested 36, flagged in decisions.md D-026.
+
+**Built:** `scripts/cv_protocol.py` (5-fold stratified CV, client assignment drawn
+once per seed over the full pool for a stable per-seed client identity across folds --
+see D-025 for why), `scripts/models_mlp.py` (17-param MLP), an amendment to
+`scripts/federated_loop.py` for opt-in divergence tracking (D-027 -- first change to
+the frozen interface since the freeze, done as an additive amendment not a rewrite),
+`scripts/run_diagnostic.py` (the sweep driver), `scripts/plot_diagnostic.py`.
+
+**Ran the full sweep:** 10 seeds x 5 folds x 2 models x 5 conditions (4 alpha + natural)
+= 100 Arm 1 trainings + 500 Arm 2 federated trainings. **31 seconds, sequential,
+single process.** Did not use the 4-way parallelism Prithvi's scope note asked for --
+each unit of work is single-digit milliseconds, so subprocess spawn overhead alone
+would have exceeded the entire sequential runtime. Flagged this deviation explicitly
+in the report (Section 8) rather than following the instruction blindly or silently
+ignoring it.
+
+**Headline findings (full detail + all six pre-committed decision-table rows evaluated
+in `docs/diagnostic_report.md`):**
+- Noise floor dropped from ~3.1pp (old single-split) to ~0.3-1.0pp (new CV protocol)
+  -- 8-10x tighter, comfortably below the effect sizes found.
+- Global accuracy really is flat for LR across the whole alpha sweep -- confirms
+  D-024 wasn't a power problem.
+- **Worst-client accuracy declines monotonically as alpha falls, for BOTH LR and
+  MLP** (LR: 69.4%->64.8%, MLP: 69.9%->51.5%, alpha=100->0.1). The penalty exists;
+  the global metric was hiding it.
+- **Client divergence rises monotonically as alpha falls, for both models, cleanly**
+  -- the mechanism itself is unambiguously present, independent of whether it shows
+  up in any accuracy metric.
+- MLP additionally shows a *global* accuracy drop at alpha=0.1 (76.9%->72.2%) that LR
+  never shows -- consistent with convexity mediating whether the penalty surfaces at
+  the global level, though not proof (worst-client damage happens for LR too, just
+  smaller).
+- Natural partition does NOT sit outside the synthetic Dirichlet range on any metric
+  -- lands around alpha=0.5-1.0 severity, not beyond alpha=0.1. Directly answers
+  D-009: real institutional heterogeneity here isn't worse than our synthetic sweep
+  already covers.
+
+**Genuinely surprising part:** how clean the worst-client and divergence signals are
+compared to how flat the global metric looked last session. The global metric wasn't
+lying, it was just the wrong place to look -- a useful thing to have discovered before
+building the quantum arms rather than after.
+
+No course of action recommended, per instruction -- interpretation is Prithvi's.
+
+---

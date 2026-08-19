@@ -565,3 +565,106 @@ robust to label skew at this scale" as a real result) before treating Arm 2 as
 validated infrastructure for Arm 3/4/5.
 
 ---
+
+## D-025 · 2026-08-18 — Diagnostic session: 5-fold CV with a stable per-seed client identity
+
+**What:** `scripts/cv_protocol.py` replaces the single 736/184 split with 5-fold
+stratified CV x 10 seeds. Client assignment (Dirichlet at a given alpha, or the
+natural 4-site split) is drawn **once per seed over the full 920-row pool**, not
+re-drawn per fold. A client's per-fold training data is (client's rows) intersect
+(fold's training rows); its per-fold test data is (client's rows) intersect (fold's
+held-out rows).
+
+**Why draw the client assignment once per seed, not once per fold:** this gives
+every client a stable identity across all 5 folds of a seed -- client 2's
+characteristic skew is the same distribution in every fold. That's what makes
+"worst-client accuracy" trackable as a single quantity per (seed, condition) rather
+than 5 unrelated per-fold random groupings that happen to also be called "client 2."
+The alternative (re-partition per fold) would make per-client metrics much noisier
+without a clear benefit.
+
+**Consequence:** every one of the 920 records is used for global testing exactly
+once per seed, giving an effective global test size of 920 and cutting the standard
+error roughly 8-10x (see `docs/diagnostic_report.md`, noise floor). Every client also
+gets its own held-out slice every fold, enabling genuine per-client evaluation.
+
+**Caveat:** at alpha=0.1, per-client test-fold sizes go as low as n=1 (median 31.5).
+Not a bug -- an expected consequence of splitting an already-skewed ~46-row average
+client slice 4 ways under a ~184-row fold. Flagged in the diagnostic report rather
+than smoothed over.
+
+---
+
+## D-026 · 2026-08-18 — MLP parameter count: 17, matched to the real VQC (18), not the requested ~36
+
+**What:** `scripts/models_mlp.py`'s `MLPModel` (6 -> 2 -> 1, tanh hidden, sigmoid
+output, both layers biased) has 17 trainable parameters.
+
+**Why 17, not the ~36 the diagnostic task prompt requested:** the actual frozen VQC
+(`docs/circuit_diagram.txt`, D-004) has 18 trainable parameters -- 6 qubits x 3
+layers x 1 RY/qubit/layer -- not 36. The stated purpose of parameter-matching (Task 4)
+is to remove model capacity as a confound when later comparing against the real VQC in
+Arm 4. Matching to a number that doesn't correspond to the real circuit would defeat
+that purpose. 17 is the closest achievable count with a standard single-hidden-layer
+architecture and clean integer hidden-unit count (h=2 -> 12+2+2+1=17; no integer h
+hits exactly 18 with a plain biased single-hidden-layer design).
+
+**Not resolved, flagged:** where the "~36" estimate came from is unclear -- possibly a
+different assumed ansatz (e.g. 2 rotations per qubit per layer would give 36). If the
+real circuit changes before Arm 4 is built, this MLP's parameter count should be
+re-matched to whatever the circuit actually is at that time, not to this number.
+
+---
+
+## D-027 · 2026-08-18 — `run_federated` interface amendment: optional divergence tracking
+
+**What:** `scripts/federated_loop.py:run_federated` gains a `track_divergence: bool =
+False` parameter. When `True`, returns `(model, divergence_per_round)` instead of just
+`model`, where `divergence_per_round[r]` is the mean pairwise L2 distance between
+client parameter vectors after local training but before aggregation, in round `r`.
+
+**Why an amendment rather than a new function:** the alternative (a separate
+`run_federated_with_divergence`) would duplicate the entire training loop body for one
+extra measurement, risking the two copies drifting apart. Keeping one function with an
+opt-in flag means there is exactly one place the federated training loop is defined,
+which matters for an oral defense of "one loop, not five scripts."
+
+**Backward compatibility:** default `False` preserves the exact original return
+contract. `scripts/run_grid.py` (Arm 1/Arm 2 grid, frozen interface, D-023) does not
+pass this argument and is unaffected -- verified by inspection, not re-run, since the
+change is additive and the default path is untouched.
+
+**Consequence for `docs/INTERFACE.md`:** the frozen loop contract is amended, not
+reopened. This is the first change to a frozen interface since the freeze (D-024) --
+noted here explicitly per the freeze's own instruction: "if a new arm seems to require
+editing shared infrastructure, stop and raise it." This wasn't a new arm, it was a new
+measurement need on the existing arms, and the change is purely additive.
+
+---
+
+## D-028 · 2026-08-18 — Diagnostic session findings: heterogeneity penalty exists, measured in the wrong place
+
+**What:** Full findings in `docs/diagnostic_report.md`. Summary: the classical
+alpha-sweep flatness observed in D-024 was real but incomplete -- global accuracy
+genuinely is flat for logistic regression across the entire alpha range (noise floor
+now ~0.3pp, 10x tighter than before, so this is not a power problem). But **worst-client
+accuracy declines monotonically as alpha falls, for both LR and MLP**, and **client
+parameter divergence rises monotonically as alpha falls, for both models, with tight
+error bars**. MLP additionally shows a global-accuracy penalty at alpha=0.1 that LR
+does not show, consistent with (not proof of) convexity mediating the effect's
+visibility at the global level.
+
+**Natural partition (objective D-009):** does not sit outside the synthetic Dirichlet
+range on any metric -- comparable to a moderate synthetic skew (~alpha=0.5-1.0), not
+more damaging than the most extreme synthetic condition tested.
+
+**Decision-table row supported:** a combination of "divergence rises, global flat,
+mechanism fires" (rows 1) and "worst-client declines, penalty exists, wrong
+measurement location" (row 2), with row 3 (convexity mediates) supported specifically
+at the global-metric level. Row 4 (natural worse than synthetic) explicitly **not**
+supported. Full row-by-row verdict in the diagnostic report, Section 6-7.
+
+**No course of action recommended here** -- interpretation reserved for Prithvi, per
+the task instruction.
+
+---

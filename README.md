@@ -21,18 +21,30 @@ advantage for either approach. Built for a university capstone
   train-only-fit imputation + scaling to the angle-encoding range
 - Dirichlet(α) partitioner with a minimum-client-size guard, plus the
   natural 4-site partition as a reference condition
-- Shared federated loop + interface contract (`docs/INTERFACE.md`, frozen)
-- Arm 1 (centralized classical) and Arm 2 (classical + FedAvg)
+- Shared federated loop + interface contract (`docs/INTERFACE.md`, frozen,
+  one additive amendment since — optional divergence tracking, D-027)
+- Arm 1 (centralized classical) and Arm 2 (classical + FedAvg), both with
+  a logistic-regression model and a small parameter-matched MLP
+- 5-fold stratified CV protocol (10 seeds), replacing the original single
+  train/test split — noise floor ~0.3–1.0pp, down from ~3.1pp
 - Resumable, crash-safe experiment logging to `results/runs.csv`
 
-**Validation status:** 4 of 5 gates pass cleanly (Arm 1 accuracy, no
-leakage, Arm 2-vs-Arm 1 agreement at α=100, seed determinism). The
-Arm 2 across-α-sweep gate does **not** show a clear monotonic decline —
-flagged, not yet resolved, see `docs/decisions.md` D-024.
+**Validation status:** the original Arm 1/Arm 2 gates (D-024) mostly pass;
+the flat α-sweep on *global* accuracy was investigated in a dedicated
+diagnostic session and found to be real but incomplete, not a bug — see
+`docs/diagnostic_report.md`. **Worst-client accuracy declines
+monotonically with α for both models, and client parameter divergence
+rises monotonically with α for both models** — the heterogeneity penalty
+this project measures is present, it just doesn't show up in a pooled
+global-accuracy score. The natural 4-site partition does not exceed the
+synthetic Dirichlet range on any metric (answers objective D-009).
 
 **Not started:** Arm 3 (FedProx), Arm 4 (VQC + FedAvg — the headline arm),
 Arm 5 (VQC + circular-mean aggregation, timeboxed). Per `docs/INTERFACE.md`,
 these should be addable without modifying the existing loop or aggregator.
+No decision yet on which accuracy metric (global vs. worst-client) is the
+headline metric going forward — that's an open interpretive call, not a
+technical blocker.
 
 **Known open items:** decision IDs D-009–D-014 are referenced in project
 history but not recorded in `docs/decisions.md` — see

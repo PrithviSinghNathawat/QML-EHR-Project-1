@@ -68,8 +68,20 @@ def run_federated(
     client_data: list[tuple[np.ndarray, np.ndarray]],  # [(X_client, y_client), ...]
     rounds: int,
     local_epochs: int,
+    track_divergence: bool = False,  # amendment, D-027, 2026-08-18 -- see below
 ) -> Model: ...
+# or, if track_divergence=True: -> tuple[Model, list[float]]
 ```
+
+**Amendment history:** `track_divergence` was added 2026-08-18 (D-027) to
+support measuring mean pairwise L2 distance between client parameter
+vectors per round, without duplicating the training loop into a second
+function. Default `False` preserves the exact original return contract
+(`-> Model`) -- `scripts/run_grid.py` does not pass this argument and is
+unaffected. When `True`, the return type changes to
+`tuple[Model, list[float]]` (the model, and one divergence value per
+round). This is the first amendment to this frozen interface since the
+freeze (D-024) -- additive only, no existing call site's behavior changed.
 
 Both return the trained model itself (not just its params) -- call
 `.predict_proba(X_test)` on the return value.

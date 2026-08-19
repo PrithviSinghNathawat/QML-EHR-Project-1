@@ -30,6 +30,10 @@ alternatives; this table is a lookup, not a substitute.
 | D-022 | 2026-08-18 | Minimum-client-size guard: floor=15 rows, reject-and-redraw |
 | D-023 | 2026-08-18 | Federated loop + interface implementation (Arm 1, Arm 2) |
 | D-024 | 2026-08-18 | Arm 1 / Arm 2 validation gate results |
+| D-025 | 2026-08-18 | Diagnostic session: 5-fold CV with a stable per-seed client identity |
+| D-026 | 2026-08-18 | MLP parameter count: 17, matched to the real VQC (18), not the requested ~36 |
+| D-027 | 2026-08-18 | `run_federated` interface amendment: optional divergence tracking |
+| D-028 | 2026-08-18 | Diagnostic session findings: heterogeneity penalty exists, measured in the wrong place |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the

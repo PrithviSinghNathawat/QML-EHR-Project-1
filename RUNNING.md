@@ -267,6 +267,41 @@ the env var and confirm it skips everything already logged.
 
 ---
 
+## Diagnostic sweep (5-fold CV, divergence, per-client/worst-client, natural vs. Dirichlet)
+
+**Command:**
+```
+.venv/Scripts/python.exe scripts/run_diagnostic.py
+.venv/Scripts/python.exe scripts/plot_diagnostic.py
+```
+
+**Expected output:** `run_diagnostic.py` prints one `seed N done (Xs elapsed)`
+line per seed, ending with a summary line (total time, training counts).
+Takes ~30s sequentially — do not parallelize this, see
+`docs/diagnostic_report.md` Section 8 for why. `plot_diagnostic.py` prints
+two `saved:` lines.
+
+**Expected files:**
+- `results/diagnostic_results.csv` (long format: one row per
+  seed/fold/model/arm/condition/client)
+- `results/diagnostic_divergence.csv` (one row per
+  seed/fold/model/condition/round)
+- `results/figs/client_divergence.png`
+- `results/figs/worst_client_accuracy.png`
+
+**Failure signature:**
+- `KeyError` on a `(model, alpha)` tuple in `plot_diagnostic.py` — the
+  `condition` column in the CSVs is read back as strings (`"100"`,
+  `"1.0"`, ...) because it's a mixed int/float/string column including
+  `"natural"`. `ALPHA_ORDER` in `plot_diagnostic.py` must be strings, not
+  numbers — this broke once already, see the fix in that file's history.
+- Any per-client row with `n=0` for a condition other than the extreme
+  end of the sweep — would mean a client was dropped from a test fold
+  entirely; not observed in the actual run (checked explicitly, see
+  `docs/diagnostic_report.md`), would be a real bug if it recurs.
+
+---
+
 ## Not yet built
 
 Arms 3, 4, and 5 don't exist yet. Per `docs/INTERFACE.md`, they should be
