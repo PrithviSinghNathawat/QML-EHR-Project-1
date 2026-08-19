@@ -1,0 +1,366 @@
+# Lab Book
+
+Dated session entries: what ran, what happened, what broke, what surprised us.
+Ugly is fine — this is where "we observed X" claims in the paper come from.
+
+---
+
+## 2026-08-18 — Environment setup + timing spike
+
+**Env verification:** venv on Python 3.11.5. `lightning.qubit` loads correctly (device
+class confirmed as `pennylane_lightning.lightning_qubit...LightningQubit`, not a silent
+fallback to `default.qubit`). `diff_method="adjoint"` runs and produces non-zero,
+correctly-shaped gradients on a 6-qubit test circuit. All 4 UCI processed files present
+with expected row counts: Cleveland 303, Hungarian 294, Switzerland 123, VA 200 (920
+total).
+
+**PennyLane 0.45.1 API note:** `qml.grad(fn, argnum=...)` no longer exists in this
+version — the keyword is now `argnums` (plural). Broke twice (once in the env check,
+once in the timing spike) before catching it. Worth remembering when writing the real
+training code later, and worth a line in `paper/06_limitations.md` if it affects
+reproducibility on other PennyLane versions.
+
+**Timing spike (`scripts/timing_spike.py`):** synthetic data, 5 clients x 180 rows x 6
+features, 6-qubit/3-layer VQC (angle encoding + RY ansatz + linear CNOT entangling),
+`lightning.qubit`, `diff_method="adjoint"`, plain gradient descent (LR=0.1, 1 local step
+per client per round), 50 federated rounds, FedAvg-style mean aggregation.
+
+Result: **232.1s total (~3.9 min) for one full run.** Per-round time was flat at
+~4.5-4.6s for most rounds, with a handful of rounds (41-45) running slower (4.9-6.0s) —
+likely OS/background scheduling noise on this machine, not a systematic slowdown; no
+obvious cause investigated further since it doesn't change the banding decision.
+
+Extrapolated:
+- 2 quantum arms x 4 alpha x 3 seeds (24 runs): ~93 min
+- 2 quantum arms x 4 alpha x 5 seeds (40 runs): ~155 min
+
+Per-run number (3.9 min) falls in the "< 5 min" band -> full grid, 5 seeds, per the
+decision table in the kickoff brief. Reported to Prithvi for confirmation; per the
+build order, stopping here and not starting the data loader until that's confirmed.
+
+**Caveat to remember:** this timing spike used synthetic random data and only 1 local
+gradient step per client per round. The real Arm 4/5 implementation may use more local
+epochs per round, which would scale the estimate up roughly linearly. Re-time once the
+real local-epoch count is decided.
+
+---
+
+## 2026-08-18 — Re-timed spike at E=5 local epochs
+
+Reason for the change: see `decisions.md`, "Local epochs per federated round: E=5, not
+E=1" — E=1 gave clients no real chance to drift apart, so there was nothing for
+Dirichlet skew or FedProx's proximal term to act on.
+
+Same script (`scripts/timing_spike.py`), same everything else (5 clients, 180 rows x 6
+features, 50 rounds, `lightning.qubit`, adjoint), only `LOCAL_STEPS` changed 1 -> 5.
+
+Result: **1107.6s total (~18.5 min) for one full run**, avg ~22.1s/round (vs. ~4.6s/round
+at E=1) — about a 4.8x increase, roughly proportional to the 5x increase in local
+gradient steps, as expected.
+
+Extrapolated:
+- 2 quantum arms x 4 alpha x 3 seeds (24 runs): ~443 min (~7.4 hr)
+- 2 quantum arms x 4 alpha x 5 seeds (40 runs): ~738 min (~12.3 hr)
+
+Per-run number (18.5 min) moved from the "<5 min" band into the **"15-30 min"** band:
+cut to 3 alpha values, Arm 5 at risk. This directly touches two locked decisions
+(alpha grid size, whether Arm 5 survives) — not resolved here, reported to Prithvi.
+Both runs (E=1 and E=5) logged as rows in `results/runs.csv`.
+
+---
+
+## 2026-08-18 — Data loader built, missingness + class balance audited
+
+Built `scripts/data_loader.py`: loads all 4 processed UCI files (no header row, `?` as
+NaN), tags each record with its `site`, converts `chol == 0` to NaN everywhere (see
+`decisions.md` — turned out to affect VA too, not just Switzerland), and binarises
+`target = (num > 0)`.
+
+Loaded 920 records total (303 + 294 + 123 + 200, matches expectation exactly).
+
+**Per-site missingness (%), after the chol==0 fix:**
+
+| site | age | sex | cp | trestbps | chol | fbs | restecg | thalach | exang | oldpeak | slope | ca | thal |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| cleveland | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 1.3 | 0.7 |
+| hungarian | 0.0 | 0.0 | 0.0 | 0.3 | 7.8 | 2.7 | 0.3 | 0.3 | 0.3 | 0.0 | 64.6 | 99.0 | 90.5 |
+| switzerland | 0.0 | 0.0 | 0.0 | 1.6 | 100.0 | 61.0 | 0.8 | 0.8 | 0.8 | 4.9 | 13.8 | 95.9 | 42.3 |
+| va | 0.0 | 0.0 | 0.0 | 28.0 | 28.0 | 3.5 | 0.0 | 26.5 | 26.5 | 28.0 | 51.0 | 99.0 | 83.0 |
+
+Cleveland is essentially complete. The other three sites are each missing something
+badly: Switzerland is 100% missing chol (all coded as 0) and 61% missing fbs on top of
+that; Hungarian and VA are both ~99% missing `ca` and heavily missing `thal`; VA is
+additionally missing a cluster of columns (trestbps, chol, thalach, exang, oldpeak) at
+~26-28% each, which looks like a block of incomplete records rather than scattered
+missingness — worth a histogram of missing-column-count-per-row later if we impute VA.
+
+**Per-site class balance:**
+
+| site | n_total | n_class_0 | n_class_1 | pct_class_1 |
+|---|---|---|---|---|
+| cleveland | 303 | 164 | 139 | 45.9 |
+| hungarian | 294 | 188 | 106 | 36.1 |
+| switzerland | 123 | 8 | 115 | 93.5 |
+| va | 200 | 51 | 149 | 74.5 |
+
+Class balance is itself wildly non-IID across sites even before any Dirichlet
+partitioning is applied — Switzerland is 93.5% positive, Hungarian is 36.1% positive.
+This natural site-level skew is worth showing explicitly (as its own bar chart) since it
+already demonstrates heterogeneity before the synthetic Dirichlet skew is layered on.
+
+**Open question, blocking the partitioner:** `ca` and `thal` are ~90-99% missing at
+every site except Cleveland. Asked Prithvi whether to drop these two columns entirely
+or impute, and if imputing, whether to fit the imputer globally or per-site. Stopping
+here per instruction until that's answered.
+
+---
+
+## 2026-08-18 — ca/thal decision + Dirichlet partitioner built
+
+Prithvi's answer: drop `ca` and `thal` entirely (see `decisions.md`). Data loader
+updated (`get_feature_frame()` now drops them; `FEATURE_COLUMNS` is 11 columns).
+
+Built `scripts/partitioner.py`: pools all 4 sites (920 records), splits into 5 clients
+via Dirichlet(alpha) label skew, seeded (seed=0) and reproducible. Ran for alpha in
+{100, 1.0, 0.5, 0.1}.
+
+**Natural 4-site partition (unchanged from earlier, repeated here for comparison):**
+
+| site | n | class 0 | class 1 | % positive |
+|---|---|---|---|---|
+| cleveland | 303 | 164 | 139 | 45.9 |
+| hungarian | 294 | 188 | 106 | 36.1 |
+| switzerland | 123 | 8 | 115 | 93.5 |
+| va | 200 | 51 | 149 | 74.5 |
+
+**Dirichlet partitions, 5 clients, seed=0:**
+
+| alpha | client 0 | client 1 | client 2 | client 3 | client 4 |
+|---|---|---|---|---|---|
+| 100 | n=173, 58.4% | n=199, 57.8% | n=184, 57.6% | n=186, 48.4% | n=178, 54.5% |
+| 1.0 | n=177, 59.9% | n=319, 66.1% | n=213, 56.3% | n=129, 48.8% | n=82, 11.0% |
+| 0.5 | n=278, 18.3% | n=22, 40.9% | n=101, 3.0% | n=245, 72.2% | n=274, 98.2% |
+| 0.1 | n=303, 0.7% | n=1, 0.0% | n=69, 0.0% | n=192, 79.7% | n=355, 99.7% |
+
+(percentages are % class-1/positive per client)
+
+Skew widens exactly as expected as alpha drops: alpha=100 keeps every client within
+~48-58% positive (close to the natural range), alpha=0.1 produces three clients that
+are essentially pure-class (0.0%, 0.0%, 0.7%) and one at 99.7%. Also notable: alpha=0.1
+client sizes are very uneven (n=1 to n=355) since the same Dirichlet draw also controls
+how much of each class lands where, not just the ratio -- worth mentioning in the paper
+since a tiny client (n=1) is itself a form of heterogeneity, not just class skew.
+
+Saved: `results/figs/partition_alpha_{100,1.0,0.5,0.1}.png` (one stacked bar chart per
+alpha) and `results/figs/partition_natural_vs_dirichlet.png` (5-panel comparison:
+natural site split alongside all 4 alphas) for the review presentation.
+
+**Still open, not blocking:** columns other than ca/thal/chol still have missingness
+at some sites (e.g. hungarian slope 64.6%, va several columns ~26-28%). Not addressed
+yet -- will need an imputation decision before PCA/scaling (build order step 3), fit on
+train split only per the leakage warning in CLAUDE.md. Separate decision from ca/thal,
+not yet asked.
+
+---
+
+## 2026-08-18 — D-015 through D-018 logged, chol dropped, 4-client partitioner, feature retention crisis
+
+Prithvi confirmed the grid stays at 4 alpha x 5 seeds despite the E=5 timing hit
+(D-015) and asked for a round-count optimization check instead of cutting alpha/seeds
+-- that's today's Task 3, still to do.
+
+**D-numbering:** retrofitted D-001 through D-008 onto the existing (previously
+unlabeled) decisions.md entries in chronological order. D-006 and D-007 landed exactly
+on the content Prithvi's D-016 referenced under those numbers, which is a good sign the
+scheme is real. D-009 through D-014 are referenced but don't exist in this repo (no
+Cleveland-only sensitivity analysis, no minimum-client-size guard, no separately
+documented D-009 objective) -- flagged in decisions.md, not fabricated. Asked Prithvi
+to clarify whether those live elsewhere.
+
+**chol dropped (D-016):** same >=85%-at-every-site rule used for ca/thal, applied to
+chol, which is 100% missing at Switzerland after the D-006 zero-recoding. Consistent
+application of the stated rule, correctly caught as an inconsistency by Prithvi before
+I'd noticed it myself.
+
+**Consequence -- ran the same rule against every remaining column
+(`scripts/feature_retention_check.py`, new script).** Only 4 columns survive a strictly
+consistent application: age, sex, cp, restecg. fbs (61% missing at Switzerland) and
+slope (64.6% at Hungarian, 51% at VA) fail just as badly as chol did; trestbps,
+thalach, exang, oldpeak all fail at VA specifically (~26-28% each, looks like a block
+of jointly-missing columns, not independent missingness). This is below the PCA-to-6
+floor. Reported to Prithvi per the explicit stop condition in the task instructions --
+did not decide unilaterally, did not proceed to the preprocessing pipeline, Task 3
+(convergence check), or Task 5 (federated loop) since all three need a settled feature
+set first. Full table logged in decisions.md, D-019.
+
+**4-client partitioner rerun (D-017):** changed `N_CLIENTS` 5 -> 4 in
+`scripts/partitioner.py` to match the 4 natural sites. Re-ran the alpha sweep:
+
+| alpha | client 0 | client 1 | client 2 | client 3 |
+|---|---|---|---|---|
+| 100 | n=186, 51.6% | n=234, 55.6% | n=244, 60.2% | n=256, 53.1% |
+| 1.0 | n=193, 55.4% | n=347, 62.0% | n=234, 52.1% | n=146, 44.5% |
+| 0.5 | n=303, 24.4% | n=368, 96.2% | n=162, 38.9% | n=87, 20.7% |
+| 0.1 | n=301, 0.0% | n=509, 99.8% | n=69, 0.0% | n=41, 2.4% |
+
+At alpha=0.1, two clients (0 and 2) have exactly 0.0% positive class -- but neither has
+a tiny row count this time (min n=41, vs. the n=1 client seen in the old 5-client run).
+**No minimum-client-size guard exists in the code** (D-010 referenced by Prithvi isn't
+implemented) -- reported the raw numbers rather than claiming a guard fired or didn't,
+since there's no floor value to check against. Whether "0% positive, n=41" counts as
+degenerate under whatever guard is eventually adopted is Prithvi's call, not inferred
+here.
+
+Also note: `scripts/timing_spike.py` still uses 5 synthetic clients, not yet updated to
+match the 4-client decision (D-017) -- flagged in decisions.md, not yet fixed, since
+the timing spike's synthetic clients don't currently correspond to a real partitioning
+scheme.
+
+**Circuit diagram, matplotlib version (Task 4):** added `qml.draw_mpl` output to
+`scripts/draw_circuit.py`, saved to `docs/circuit_diagram.png` at dpi=220. Text version
+kept alongside it. Both from the same circuit definition, so they can't drift apart.
+
+**RUNNING.md created:** command / expected output / failure signature for every
+component built so far (env check, data loader, partitioner, circuit diagram, timing
+spike). Will keep updating per-component going forward, per instruction.
+
+**Not started:** Task 3 (convergence check) and Task 5 (federated loop, Arm 1, Arm 2,
+validation gates) both need a resolved feature set and a real preprocessing pipeline
+(impute remaining missingness / scale / PCA on actual data, not synthetic). Blocked on
+the feature-retention question above. Explained the tradeoff to Prithvi rather than
+picking one, since it changes what "PCA to 6 components" (D-004) even means.
+
+---
+
+## 2026-08-18 — Feature retention curve + run-level parallelism test
+
+**Feature retention curve, requested by Prithvi instead of picking a threshold
+blind.** Built `scripts/feature_retention_curve.py`: sweeps the "min % present at
+every site" threshold from 50-100% and counts survivors at each point, plus reports
+the exact list at 85/70/50%. Found a genuine cliff structure, not a smooth tradeoff:
+
+| worst-site missingness band | columns added | cumulative survivors |
+|---|---|---|
+| 0.0-0.8% | age, sex, cp, restecg | 4 |
+| 26.5-28.0% | thalach, exang, trestbps, oldpeak | 8 |
+| 61.0-64.6% | fbs, slope | 10 |
+| 90.5-100.0% | thal, ca, chol | 13 (all) |
+
+Big empty gap between ~28% and ~61% missing -- nothing sits in that range, so any
+threshold from ~27% to ~60% missing-allowed gives the same 8-feature answer. That's a
+wide, non-fragile plateau. Sent the plot (`results/figs/feature_retention_curve.png`)
+to Prithvi.
+
+Follow-up: Prithvi asked for the exact threshold that yields precisely 6 features (to
+match the locked PCA-to-6 / D-004 framing exactly). Found it: present-threshold in
+(72.0%, 73.5%] -- narrow, ~1.5 percentage points, bounded by two exact ties
+(thalach/exang both at 26.5% missing on the low edge, trestbps/oldpeak both at 28.0%
+missing on the high edge). Flagged that this is a much more exact, deliberate choice
+than the 8-feature plateau -- there's no slack in it. Not yet decided which count
+(6 or 8, or something else) to actually use -- reported the numbers, did not choose.
+
+**Run-level parallelism test, Prithvi's question: does parallelizing across grid runs
+actually help, and by how much?** Built `scripts/single_run_worker.py` (one reduced
+federated run, invokable as a subprocess, 4 clients/D-017, LOCAL_STEPS=5/D-005, 10
+rounds instead of 50 to keep the test itself fast) and
+`scripts/parallel_throughput_test.py` (baseline + 4-concurrent x2 threading configs).
+
+Machine has 16 logical cores. Results:
+- baseline (1 run): 235.5s
+- 4 concurrent, default env: 260.8s wall-clock -> 3.61x speedup, 90% efficiency
+- 4 concurrent, OMP_NUM_THREADS capped to 4: 259.6s -> 3.63x speedup, 91% efficiency
+
+Capping threads made basically no difference -- 6 qubits is too small a circuit for
+`lightning.qubit`'s internal OpenMP threading to meaningfully compete with
+process-level parallelism for cores. 90%+ efficiency at 4-way parallelism is a good
+result and didn't need any special environment configuration.
+
+Sanity check: this test's 10-round baseline (235.5s at 4 clients) scales to ~1177.7s
+for a real 50-round run, which is within ~6% of D-015's 1107.6s estimate (measured at
+5 clients instead of 4) -- two independently-run estimates roughly agree, which is
+reassuring.
+
+**Applying this to the real grid:** ~90% efficiency on the 40-run quantum grid (D-015)
+in batches of 4 concurrent processes works out to roughly **3.6 hours wall-clock**,
+down from the ~12.3-13 hour sequential estimate. Logged as D-020. Didn't test beyond
+4-way parallelism (16 cores could maybe support more) since that's not what was asked;
+flagged as an untested follow-up rather than run speculatively. Also flagged: this was
+measured on the dev machine, needs re-verification on whatever machine actually runs
+the real grid.
+
+Both timing numbers (baseline + 2 parallel-batch wall-clocks) logged to
+`results/runs.csv` as `parallel_test_*` rows, same convention as the earlier
+`timing_spike_*` throwaway rows.
+
+---
+
+## 2026-08-18 — Foundation session: preprocessing, partitioner guard, federated loop, Arm 1 + Arm 2, gates
+
+Big session. Prithvi's prompt asked to log D-021 through D-023 "pasted separately" but
+the content didn't actually come through in the message -- flagged it, used D-021
+through D-024 as sequential provisional numbers for what I built this session instead
+of guessing at Prithvi's intended content. Also caught and corrected my own mistake
+from last session: I'd told Prithvi chol was "already dropped" from the data loader --
+it wasn't, I'd only done the analysis. Fixed for real this time.
+
+**Feature finalization:** 6 features by worst-site availability (age, sex, cp,
+restecg, thalach, exang), PCA removed entirely -- direct one-feature-one-qubit mapping.
+Full per-site availability table and reasoning in decisions.md D-021.
+`scripts/data_loader.py` FEATURE_COLUMNS updated. Feature-threshold curve regenerated
+at dpi=220 for the paper (`results/figs/feature_threshold_curve.png`).
+
+**Preprocessing pipeline built (`scripts/preprocessing.py`):** stratified 80/20
+train/test split (736/184 rows), median imputation + MinMax scaling to [0, pi] for
+angle encoding, both fit on the training split only. Test-split values can exceed pi
+slightly since the scaler doesn't see test data when fitting -- expected, not a bug.
+
+**Partitioner: minimum-client-size guard actually implemented this time.** Floor=15
+rows, reject-and-redraw up to 500 attempts. This is the third time Prithvi has asked
+about this guard (D-010) across sessions -- first two times I could only report it
+didn't exist; this time I built it rather than flagging it again. Verified it actually
+works with a stress test at alpha=0.05/0.01 (outside the real grid) since the real
+grid's draws didn't happen to need it. Full results in decisions.md D-022.
+
+**Federated loop + Arm 1 + Arm 2 built:** `scripts/models.py` (custom logistic
+regression, not sklearn, so it can satisfy the exact `fit(X,y,epochs)` /
+flat-params-vector interface contract), `scripts/aggregators.py` (fedavg),
+`scripts/federated_loop.py` (`run_centralized`, `run_federated` -- confirmed by
+inspection, no `if quantum` anywhere), `scripts/run_grid.py` (resumable runner).
+
+**Resume test, done for real with an actual process kill:** launched the grid with an
+artificial 1s per-run delay (real runs take ~10-30ms, too fast to interrupt
+meaningfully), let it run ~6s, tried to kill it -- first attempt failed silently
+because git-bash's `$!` gave the wrong PID under Windows process emulation (killed a
+shell wrapper, not the actual `python.exe`). Found the real PID via `ps aux`, killed
+it properly. Confirmed 19 of 25 combinations had been logged. Restarted without the
+delay: it printed `skip ...` for exactly those 19 and only ran the remaining 6, no
+duplicate rows in the final CSV. Test passed. Worth remembering the git-bash PID gotcha
+if this needs retesting.
+
+**Validation gates -- 4 of 5 clearly pass, 1 doesn't show the expected pattern:**
+
+| gate | result |
+|---|---|
+| Arm 1 accuracy | 77.50% (std 3.04%, 5 seeds) -- inside the revised ~75-80% band |
+| Leakage check (<90%) | pass, nowhere close |
+| Arm 2 @ alpha=100 vs Arm 1 | 77.28% vs 77.50%, 0.22 pct pt gap -- well inside ~2% |
+| Arm 2 across alpha sweep | flat/noisy: 100->77.28%, 1.0->77.39%, 0.5->76.96%, 0.1->77.50%. Range (0.54pp) smaller than within-group std (3.3-3.7pp) at every alpha. Alpha=0.1 has the *highest* mean, not the lowest -- not monotonic, not even a weak trend. |
+| Repeated seed | bit-identical params and metrics on an independent rerun |
+
+Did not tune anything to try to force the alpha-sweep gate to show a decline --
+that would be adjusting the experiment to match the expected result, which is exactly
+what Prithvi's guardrails rule out. Reported as observed. Hypothesis (not verified):
+`LogisticRegressionModel` is linear and the federated setup (20 rounds, 5 local
+epochs, 4 clients) may just converge to a similar decision boundary regardless of
+per-round client skew at this model capacity/dataset size -- which would itself be a
+legitimate finding, not a bug, if confirmed. Flagged to Prithvi rather than assumed.
+
+**Interface freeze:** `docs/INTERFACE.md` written -- exact shapes/dtypes for
+`get_params`/`set_params`/`fit`/`predict_proba`, the aggregator signature, and the
+loop's call contract. Circuit diagram (`docs/circuit_diagram.png`, dpi=220) already
+existed from an earlier session and didn't need regenerating -- circuit design
+(6 qubits, 3 layers, RY + linear CNOT) is unaffected by the PCA-removal decision.
+
+**Stopped here per instruction.** Did not start Arm 3, 4, or 5.
+
+---
