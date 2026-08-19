@@ -6,12 +6,10 @@ __pycache__/
 # Virtual environment
 .venv/
 
-# Scratch / regenerable output -- all of these are produced by scripts/
-# already in the repo, from data + decisions already recorded. Figures are
-# not committed; regenerate with the commands in RUNNING.md. runs.csv IS
-# committed (see below) -- the numbers, not the plots, are the record that
-# must not drift from the code that produced them.
-results/figs/
+# Reversed 2026-08-18: results/figs/ was previously ignored (regenerable
+# from committed scripts + data). The diagnostic session explicitly wants
+# figures pushed alongside the report, so they're tracked now, including
+# the ones from earlier sessions. Only true scratch output stays ignored.
 results/parallel_test/
 
 # OS
