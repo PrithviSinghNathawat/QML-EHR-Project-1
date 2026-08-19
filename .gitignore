@@ -5,6 +5,7 @@ __pycache__/
 
 # Virtual environment
 .venv/
+venv/
 
 # Reversed 2026-08-18: results/figs/ was previously ignored (regenerable
 # from committed scripts + data). The diagnostic session explicitly wants
