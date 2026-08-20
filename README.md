@@ -54,6 +54,21 @@ sits between the MLP and the convex LR reference. Wall-clock cost: ~13,300x
 the MLP's, per training run, on this simulator. Full numbers:
 `docs/arm4_report.md`.
 
+**Two follow-up checks, both reported with their limitations rather than
+smoothed over:**
+- A capacity-matched (weakened) MLP was built to rule out the VQC's
+  robustness being a capacity artifact. The calibration didn't generalize
+  from its single-seed test to the full sweep, and the weakened
+  configuration turned out to make FedAvg training mathematically
+  partition-invariant (verified directly against the trained parameters)
+  — so its degradation number doesn't cleanly answer the original
+  question. See `docs/arm4_capacity_control_report.md`.
+- The D-036 circular-mean null result's explanation (angles never reach
+  the wraparound boundary) was checked directly against real trained
+  parameters, not just asserted — confirmed: max angle magnitude observed
+  is 1.35 radians short of π, with no trend toward the boundary as
+  heterogeneity increases. See `docs/arm5_angle_verification.md`.
+
 **Not started:** Arm 3 (FedProx) — in progress on a teammate's branch in
 parallel; this branch does not touch `federated_loop.py`, `data_loader.py`,
 `partitioner.py`, `docs/INTERFACE.md`, or any quantum file, by agreement.

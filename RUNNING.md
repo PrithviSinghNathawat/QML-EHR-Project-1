@@ -367,6 +367,53 @@ notification. Every worker subprocess runs with `PYTHONUNBUFFERED=1`.
 
 ---
 
+## Weakened-MLP capacity control (Arm 4 follow-up)
+
+**Command:**
+```
+.venv/Scripts/python.exe scripts/run_weak_mlp_sweep.py
+```
+
+**Expected output:** 10 `seed N done` lines, then a `wrote ...` line.
+Fast (classical) — a few seconds.
+
+**Expected files:** `results/weak_mlp_diagnostic_results.csv`,
+`results/weak_mlp_diagnostic_divergence.csv`
+
+**Known finding, not a bug:** global accuracy for `weak-MLP` is identical
+to 4 decimal places across every condition, for every seed/fold. This is
+real — see `docs/arm4_capacity_control_report.md` and D-037 for why
+(`local_epochs=1` + FedAvg is mathematically partition-invariant for a
+single full-batch local step). If this configuration's parameters
+(`HIDDEN`, `FEDERATED_ROUNDS`, `LOCAL_EPOCHS` at the top of the script)
+are changed, re-verify whether the degeneracy still holds before trusting
+any degradation number from this script.
+
+---
+
+## Angle capture (verifying the D-036 circular-mean explanation)
+
+**Command:**
+```
+.venv/Scripts/python.exe -u scripts/capture_angles_orchestrator.py
+```
+
+**What it does:** re-runs a 20-replicate sample (5 conditions x 2 seeds x
+1 fold x both arms) with the training loop reimplemented inline (not
+calling `run_federated`) so it can save every client's raw trained
+parameter vector every round — data the original Arm 4/5 sweeps didn't
+persist. Deliberately doesn't touch `federated_loop.py` a second time for
+this one-off diagnostic need.
+
+**Expected files:** `results/angle_capture/arm{4,5}_{condition}_{seed}_{fold}.npz`,
+each containing `client_params` (rounds x n_clients x 18) and
+`global_params` (rounds+1 x 18).
+
+**Resumable** the same way as the main orchestrators (skips a combo whose
+`.npz` already exists).
+
+---
+
 ## Not yet built
 
 Arm 3 (FedProx) doesn't exist yet — being built by a teammate on a

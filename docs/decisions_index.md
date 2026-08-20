@@ -42,6 +42,8 @@ alternatives; this table is a lookup, not a substitute.
 | D-034 | 2026-08-20 | Arm 4 (VQC+FedAvg) results: trained properly, penalty magnitude between LR and MLP |
 | D-035 | 2026-08-20 | Arm 5 (VQC + circular-mean aggregation) built and launched |
 | D-036 | 2026-08-20 | Arm 5 results: circular-mean aggregation makes no measurable difference vs FedAvg |
+| D-037 | 2026-08-20 | Capacity control for Arm 4: weakened MLP, calibration mismatch, training degeneracy found |
+| D-038 | 2026-08-20 | D-036 circular-mean explanation verified directly: confirmed |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the

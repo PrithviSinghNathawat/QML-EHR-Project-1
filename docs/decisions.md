@@ -843,3 +843,67 @@ worst-client degradation relative to FedAvg in this data. The aggregator choice 
 not what determines VQC heterogeneity sensitivity at this scale.
 
 ---
+
+## D-037 · 2026-08-20 — Capacity control for Arm 4: weakened MLP, calibration mismatch, and a training degeneracy
+
+**What:** Built a deliberately weakened classical MLP (hidden=1, 9 params; federated
+rounds reduced 20->4; local epochs reduced 5->1) to test whether the VQC's smaller
+worst-client decline vs the matched MLP (D-034) is a capacity artifact rather than a
+model-family effect. Calibrated once, against alpha=100/seed=0 only, to match the
+VQC's alpha=100 worst-client baseline (0.6488) before running the full sweep. Full
+writeup: `docs/arm4_capacity_control_report.md`.
+
+**Calibration did not generalize:** seed=0 gave 0.6483 (0.05pp from target); the
+full 10-seed sweep gave 0.5236 (12.5pp undershoot). Not re-tuned after seeing this
+-- reported as measured, per instruction ("match the baseline accuracy only, then
+report what the sweep gives").
+
+**Discovered a training degeneracy that invalidates the direct comparison:** the
+weakened model's trained parameters are bit-identical across every alpha condition
+(verified directly -- same seed/fold, different alpha, identical parameters to every
+printed digit and identical `predict_proba` output). Cause: with `local_epochs=1`
+(one full-batch gradient step per client per round) and FedAvg (size-weighted mean),
+the aggregated update is mathematically identical to a single full-batch gradient
+step on the *pooled* data, independent of partition, by linearity of the sum-of-
+per-example-gradients each client computes. Confirmed this is real, not a bug: local
+(pre-aggregation) client divergence is genuinely nonzero and rises with
+heterogeneity (0.034->0.352, alpha=100->0.1) -- individual clients do diverge --
+but aggregation exactly erases that difference in the global model under this
+specific configuration.
+
+**Consequence:** the weakened MLP's measured 36.77pp worst-client decline is real as
+a number but is an **evaluation-composition effect** (one fixed model scored against
+increasingly skewed per-client test slices), not a **training-heterogeneity effect**
+(the VQC and full MLP each end up as genuinely different trained models per
+condition; this config does not). Not directly comparable to the VQC's or full
+MLP's declines for that reason. **Does not resolve the original capacity-confound
+question.**
+
+**Kept, not discarded:** the degeneracy itself is a useful finding for how future
+capacity/budget calibration in this project should be checked (compare trained
+parameters across conditions before trusting a reduced-budget degradation number).
+
+---
+
+## D-038 · 2026-08-20 — D-036 circular-mean explanation verified directly: confirmed
+
+**What:** D-036 attributed the Arm 5 (circular-mean) vs Arm 4 (FedAvg) null result to
+trained rotation angles never reaching the wraparound boundary, but this was
+unverified -- the original sweeps saved metrics and a scalar divergence, not raw
+parameter vectors. Re-ran a 20-replicate representative sample (5 conditions x 2
+seeds x 1 fold, both arms) with the training loop reimplemented inline specifically
+to capture every client's raw parameter vector every round. Full writeup:
+`docs/arm5_angle_verification.md`.
+
+**Result: confirmed.** Across 28,800 captured client angle values, max |theta| =
+1.7927 -- 1.35 radians short of pi (3.1416), comfortably inside the region where
+circular mean and linear mean agree. 0.0000% of values exceed 0.9*pi. Checked
+specifically whether the most heterogeneous condition (alpha=0.1) pushes angles
+closer to the boundary -- it doesn't; alpha=100 has the largest magnitudes in this
+sample, no trend toward the boundary as heterogeneity increases.
+
+**No alternative explanation needed.** The original account in D-036 was correct, not
+just plausible -- driven by the small learning rate (0.1), narrow initialization
+(0.1*N(0,1)), and modest round count (20), independent of alpha.
+
+---

@@ -509,3 +509,60 @@ VQC trained properly so Arm 5 built and launched per the pre-committed branch,
 pushed to `prithvi-arm4-vqc`, PR opened.
 
 ---
+
+## 2026-08-20 — Two follow-ups: capacity-matched MLP, and verifying the circular-mean explanation
+
+**Capacity control (D-037).** Calibrated a weakened MLP (hidden=1, 9 params) against
+the VQC's alpha=100 worst-client baseline. Hidden units alone (hidden=1, full 20
+rounds/5 local epochs) only got to 0.6852 vs target 0.6488 -- needed early stopping
+too. Grid-searched rounds/local_epochs down to `rounds=4, local_epochs=1`, which hit
+0.6483 on seed=0 -- looked like an excellent match.
+
+**It wasn't.** Ran the full 10-seed sweep and got 0.5236 at alpha=100, not 0.6483 --
+seed=0 was not representative, 12.5pp miss. Did not go back and re-calibrate after
+seeing this (would have been exactly the "tune toward an outcome" the instruction
+ruled out) -- reported the mismatch honestly instead.
+
+**Then a bigger catch, before trusting the degradation number at all:** worst-client
+accuracy for this weakened MLP declined 36.77pp across the sweep -- steeper than
+either the full MLP (18.46pp) or VQC (7.25pp), which would naively suggest capacity
+reduction makes things worse, not better, undercutting Prithvi's original concern.
+But global accuracy for this model was *exactly* 0.6001 (to 4 decimal places) at
+every single condition, every seed, every fold -- checked the actual trained
+parameters directly and they're bit-identical across alpha=100 vs alpha=0.1 for a
+given seed/fold. Traced this to a real mathematical fact: with `local_epochs=1`
+(single full-batch local step) and FedAvg (size-weighted mean), the aggregated
+update is exactly what a single centralized full-batch gradient step on the pooled
+data would give, independent of partition, by linearity. Confirmed it's not a bug by
+checking pre-aggregation client divergence separately -- that *does* rise with
+heterogeneity (0.034->0.352) as expected, so individual clients really do diverge,
+but the aggregation step exactly cancels that difference out of the global model
+under this specific configuration.
+
+**Consequence:** the weakened MLP's degradation number is real but measures
+something different from the VQC's/full MLP's (evaluation-slice composition on a
+fixed model, not training-time heterogeneity sensitivity on genuinely different
+trained models) -- doesn't cleanly answer the original capacity-confound question.
+Reported this limitation prominently rather than presenting the 36.77pp number
+without it. Full writeup: `docs/arm4_capacity_control_report.md`.
+
+**Verifying the D-036 circular-mean explanation (D-038).** The original attribution
+(angles never reach the wraparound boundary) was never actually checked against real
+data -- the sweeps didn't save raw parameter vectors, only metrics. Re-ran a
+20-replicate sample (5 conditions x 2 seeds x 1 fold, both arms) with the training
+loop reimplemented inline just to capture every client's parameters every round
+(deliberately avoided touching `federated_loop.py` again for this one-off need).
+~33 minutes, 4-way parallel.
+
+**Confirmed cleanly:** across 28,800 captured angle values, max |theta| = 1.79,
+1.35 radians short of pi. Zero values exceed 0.9*pi. Checked whether alpha=0.1 pushes
+closer to the boundary than alpha=100 -- it doesn't, no trend at all. The original
+explanation was right, not just plausible. Full writeup:
+`docs/arm5_angle_verification.md`.
+
+Both follow-ups produced exactly what Prithvi asked for: report what's actually
+found, including when a calibration doesn't hold or an explanation needs checking
+rather than trusting, without adjusting anything to make either land somewhere
+cleaner. Pushing now.
+
+---
