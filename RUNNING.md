@@ -302,12 +302,77 @@ two `saved:` lines.
 
 ---
 
+## Arm 4 sanity check (run this before trusting any Arm 4 accuracy number)
+
+**Command:**
+```
+.venv/Scripts/python.exe scripts/sanity_check_vqc.py
+```
+
+**Expected output:** client sizes line, 15 `round N/15  loss=X.XXXX` lines
+with loss decreasing, ending with a total-time line and a `saved:` line.
+
+**Expected files:** `results/figs/arm4_sanity_loss_curve.png`
+
+**Failure signature:**
+- Loss flat or not decreasing — barren plateau or gradients not flowing.
+  Per `CLAUDE.md`'s validation gate: do not trust any Arm 4 accuracy
+  number until this is fixed. Do not proceed to the full sweep.
+
+---
+
+## Arm 4 / Arm 5 full sweep (VQC + FedAvg / VQC + circular-mean)
+
+**Command:**
+```
+.venv/Scripts/python.exe -u scripts/arm4_orchestrator.py   # or arm5_orchestrator.py
+.venv/Scripts/python.exe scripts/merge_arm4_results.py     # (or a merge_arm5_results.py analog)
+```
+
+**Cost:** this is compute-bound, unlike the classical arms. Measured:
+~518s mean per replicate, 250 replicates, ~9 hours wall-clock with 4-way
+parallelism (near-perfect ~4.0x speedup observed). **Before running the
+full sweep on a new machine, run `--estimate-only 4` first** and
+extrapolate — do not assume the number above transfers; it didn't
+transfer from the classical D-020 measurement either.
+
+**Resumable by construction:** each replicate's output is
+`results/arm{4,5}_partial/{condition}_{seed}_{fold}.json`. A worker skips
+a replicate whose output file already exists. Killing the orchestrator
+(or the machine) and rerunning the same command picks up exactly where
+it left off — validated with a real kill test for the classical grid
+(D-023) and by construction here (same mechanism, same guarantee).
+
+**Progress while running:** `results/runs_arm{4,5}.csv` grows by one row
+immediately after each replicate completes (not batched at the end) —
+read it directly at any time, no need to wait for a completion
+notification. Every worker subprocess runs with `PYTHONUNBUFFERED=1`.
+
+**Expected files after a full run:**
+- `results/runs_arm4.csv` / `results/runs_arm5.csv` (simple per-replicate
+  summary rows, same schema as `results/runs.csv`)
+- `results/arm{4,5}_partial/*.json` (250 files each, one per replicate,
+  the resume markers)
+- after running the merge script:
+  `results/arm{4,5}_diagnostic_results.csv`,
+  `results/arm{4,5}_diagnostic_divergence.csv` (long format, same schema
+  as the classical `results/diagnostic_*.csv`, for direct comparison)
+
+**Failure signature:**
+- `WARNING: worker for ... exited without output` — a subprocess crashed;
+  its `.json` was never written so it'll be retried on the next run,
+  but the crash reason isn't captured (workers share the parent's
+  stdout/stderr, not logged per-worker). Check by rerunning that single
+  combo directly: `python scripts/arm4_worker.py <condition> <seed> <fold>`.
+
+---
+
 ## Not yet built
 
-Arms 3, 4, and 5 don't exist yet. Per `docs/INTERFACE.md`, they should be
-addable without modifying `scripts/federated_loop.py` or
-`scripts/aggregators.py` — if implementing one of them seems to require
-that, stop and raise it rather than editing shared infrastructure.
+Arm 3 (FedProx) doesn't exist yet — being built by a teammate on a
+separate branch; do not edit `federated_loop.py`, `data_loader.py`,
+`partitioner.py`, `docs/INTERFACE.md`, or any `*_vqc.py` file, per that
+work split.
 
 Also outstanding: `scripts/timing_spike.py` still uses 5 synthetic clients,
 not yet updated to match the 4-client decision (D-017) — flagged in

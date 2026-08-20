@@ -668,3 +668,153 @@ supported. Full row-by-row verdict in the diagnostic report, Section 6-7.
 the task instruction.
 
 ---
+
+## D-029 · 2026-08-19 — Worst-client accuracy is the primary metric; global is secondary
+
+**What:** Following the diagnostic session (D-028, `docs/diagnostic_report.md`),
+worst-client accuracy is reported first everywhere going forward, with global
+accuracy reported second. Decided by Prithvi.
+
+**Why:** the diagnostic showed global accuracy stays flat across the entire alpha
+sweep for both classical models, while worst-client accuracy declines monotonically
+for both -- the global metric was hiding the effect this project measures.
+
+**Model roles confirmed:** the 17-parameter MLP (D-026) is the matched classical
+comparator for the actual 18-parameter VQC (D-004). Logistic regression remains in
+all reporting as the convex reference, not replaced by the MLP.
+
+**Numbering note:** this session's instructions again referenced decisions "pasted
+separately" that did not arrive in the actual message (third occurrence of this
+pattern -- see the numbering-reconciliation entries earlier in this file). This entry
+records only what was stated inline in the actual message received.
+
+---
+
+## D-030 · 2026-08-19 — Primary metric changed to worst-client performance
+
+Logged verbatim, per instruction:
+
+Worst-client accuracy (minimum across clients, evaluated on each client's own
+held-out data) becomes the primary outcome metric; global pooled accuracy is
+retained as secondary. Evidence: with the noise floor reduced to 0.3-1.0pp via
+5-fold CV x 10 seeds, global accuracy is flat across the entire alpha sweep for
+logistic regression, while worst-client accuracy declines monotonically for both
+model classes (LR 69.4%->64.8%; MLP 69.9%->51.5%). Mean pairwise client parameter
+divergence also rises monotonically, confirming the mechanism directly rather than
+by inference. Interpretation: the heterogeneity penalty at this scale is a
+distributional/fairness effect rather than an average-performance effect.
+Aggregation protects the global model while individual clients absorb the damage;
+measuring only global accuracy conceals this entirely. Attribution caution:
+degradation of client-level performance under non-IID conditions is established in
+the federated fairness literature. We confirm it; we do not claim it.
+
+*(This formalizes, with full evidence and attribution caution, what D-029 recorded
+as a summary decision on 2026-08-18 -- not a duplicate, D-029's brief form and this
+entry's verbatim form are both kept per the append-only rule.)*
+
+---
+
+## D-031 · 2026-08-19 — Convexity mediates whether the penalty surfaces globally
+
+Logged verbatim, per instruction:
+
+Evidence: the MLP shows a global accuracy drop at alpha=0.1 (76.9%->72.2%) that
+logistic regression never exhibits, while both show worst-client degradation (MLP
+18.4pp vs LR 4.6pp). Interpretation: for convex objectives, parameter averaging
+approximates the pooled optimum largely independently of partitioning, confining
+damage to individual clients. Non-convex models drift further and the damage
+propagates to the global model. Consequence: the MLP (17 trainable parameters) is
+the correct classical comparator for the VQC (18 parameters), matched in both
+capacity and convexity. Logistic regression is retained as a reported convex
+reference. Reporting both prevents this from being model selection.
+
+---
+
+## D-032 · 2026-08-19 — Natural institutional heterogeneity is milder than commonly-used synthetic settings
+
+Logged verbatim, per instruction:
+
+Evidence: the natural four-site partition does not exceed the synthetic Dirichlet
+range on any metric, falling at approximately alpha = 0.5-1.0. Interpretation:
+alpha = 0.1, widely used in the federated learning literature to represent
+realistic non-IID conditions, is more severe than the heterogeneity observed in a
+real four-site clinical archive. Synthetic partitioning at commonly-used
+concentration values may overstate real-world heterogeneity. This directly answers
+objective D-009 and contradicts our prior expectation that synthetic skew would
+understate real institutional differences; the expectation was recorded before
+measurement and is reported as refuted. Required hedging: single dataset, four
+institutions, label-skew comparison. We report a calibration point, not a general
+claim.
+
+---
+
+## D-033 · 2026-08-19 — Protocol: 5-fold stratified CV x 10 seeds
+
+Logged verbatim, per instruction:
+
+5-fold stratified CV x 10 seeds, replacing the single 736/184 split. Partitioning
+occurs inside each fold's training set, leaving the federated protocol unchanged.
+Noise floor 3.1pp -> 0.3-1.0pp.
+
+*(Formalizes D-025's implementation-level entry from 2026-08-18 as a named
+protocol decision.)*
+
+---
+
+## D-034 · 2026-08-20 — Arm 4 (VQC + FedAvg) results: trained properly, penalty magnitude between LR and MLP
+
+**What:** Full 250-replicate sweep completed (5-fold CV x 10 seeds x 5 conditions),
+identical protocol to the classical diagnostic. Full writeup: `docs/arm4_report.md`.
+
+**Confirmed the VQC trained:** sanity check (Task 2, 2 clients, alpha=100, 15 rounds)
+showed loss decreasing monotonically 1.096 -> 0.648, not plateaued. Not a barren
+plateau or dead gradients.
+
+**Worst-client accuracy declines monotonically for VQC too** (0.6488 -> 0.5763,
+alpha=100->0.1, a 7.25pp drop), same qualitative pattern as both classical models.
+In magnitude, the decline sits **between** the convex reference LR (4.66pp) and the
+matched non-convex comparator MLP (18.46pp) -- more heterogeneity-sensitive than LR,
+less than MLP, at every alpha tested. The quantum worst-client curve does **not**
+fall faster than the MLP's -- it's roughly a third as steep.
+
+**Wall-clock:** Arm 4 costs ~13,318x the matched MLP's per-run wall-clock (measured:
+518.4s mean per VQC replicate vs 0.0389s mean per MLP replicate, same protocol,
+directly timed for comparison). Total Arm 4 compute: 36.0 CPU-hours, 8.97 hours
+actual wall-clock with 4-way parallelism (near-perfect ~4.0x speedup, better than
+D-020's ~90% efficiency estimate -- this workload apparently has less inter-process
+contention than the classical timing-spike workload did).
+
+**Consequence for Arm 5:** per the pre-committed branch (session instructions),
+VQC trained properly, so Arm 5 (circular-mean aggregation) proceeds. Its per-replicate
+cost should be near-identical to Arm 4's (the aggregator function is O(n_clients),
+not the bottleneck -- VQC local training dominates >99.9% of wall-clock either way),
+so no fresh timing estimate was required before launching it -- see Arm 5 entry below.
+
+---
+
+## D-035 · 2026-08-20 — Arm 5 (VQC + circular-mean aggregation) built and launched
+
+**What:** `scripts/aggregators.py:circular_mean` added -- `atan2(sum(w*sin(theta)),
+sum(w*cos(theta)))` per parameter, weighted by client size. Only meaningful for
+angle-valued parameters (the VQC's rotation angles); not applied to LR/MLP. The
+D-007 ablation citing A2G-QFL.
+
+**Against the frozen interface, no changes to `federated_loop.py` or the existing
+`fedavg`:** verified by a direct smoke test (`circular_mean` passed to the
+unmodified `run_federated`, produced correctly-shaped output) before building the
+full worker/orchestrator (`scripts/arm5_worker.py`, `scripts/arm5_orchestrator.py`
+-- near-exact copies of the Arm 4 versions, only the aggregator import and output
+paths differ).
+
+**Launched the full 250-replicate sweep** (same protocol as Arm 4: 5-fold CV x 10
+seeds x 5 conditions) after a single-replicate correctness check (385.3s, consistent
+with Arm 4's per-replicate timing). No fresh runtime estimate was requested from
+Prithvi before this launch -- per the pre-committed branch instruction ("if VQC
+trained properly, build Arm 5, run the same protocol") and because the cost is
+already a known quantity from Arm 4 (same circuit, same rounds, same client
+structure -- only the aggregator function changes, and that function is O(n_clients),
+not the bottleneck). Results land in `results/runs_arm5.csv`
+(`results/arm5_diagnostic_results.csv` / `results/arm5_diagnostic_divergence.csv`
+after merging, same pattern as Arm 4) -- reported once the sweep completes.
+
+---

@@ -34,6 +34,13 @@ alternatives; this table is a lookup, not a substitute.
 | D-026 | 2026-08-18 | MLP parameter count: 17, matched to the real VQC (18), not the requested ~36 |
 | D-027 | 2026-08-18 | `run_federated` interface amendment: optional divergence tracking |
 | D-028 | 2026-08-18 | Diagnostic session findings: heterogeneity penalty exists, measured in the wrong place |
+| D-029 | 2026-08-19 | Worst-client accuracy is the primary metric; global is secondary |
+| D-030 | 2026-08-19 | Primary metric changed to worst-client performance (verbatim, with evidence + attribution caution) |
+| D-031 | 2026-08-19 | Convexity mediates whether the penalty surfaces globally |
+| D-032 | 2026-08-19 | Natural institutional heterogeneity is milder than commonly-used synthetic settings (answers D-009) |
+| D-033 | 2026-08-19 | Protocol: 5-fold stratified CV x 10 seeds (named protocol decision) |
+| D-034 | 2026-08-20 | Arm 4 (VQC+FedAvg) results: trained properly, penalty magnitude between LR and MLP |
+| D-035 | 2026-08-20 | Arm 5 (VQC + circular-mean aggregation) built and launched |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the

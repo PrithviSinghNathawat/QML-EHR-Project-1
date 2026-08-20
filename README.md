@@ -12,7 +12,7 @@ advantage for either approach. Built for a university capstone
 
 ## Status
 
-*Last updated 2026-08-18 — keep this section honest and current; see
+*Last updated 2026-08-20 — keep this section honest and current; see
 `docs/labbook.md` for the session that produced this state.*
 
 **Implemented and validated:**
@@ -23,32 +23,42 @@ advantage for either approach. Built for a university capstone
   natural 4-site partition as a reference condition
 - Shared federated loop + interface contract (`docs/INTERFACE.md`, frozen,
   one additive amendment since — optional divergence tracking, D-027)
-- Arm 1 (centralized classical) and Arm 2 (classical + FedAvg), both with
-  a logistic-regression model and a small parameter-matched MLP
-- 5-fold stratified CV protocol (10 seeds), replacing the original single
-  train/test split — noise floor ~0.3–1.0pp, down from ~3.1pp
-- Resumable, crash-safe experiment logging to `results/runs.csv`
+- Arm 1 (centralized classical) and Arm 2 (classical + FedAvg): logistic
+  regression (convex reference) and a 17-parameter MLP (matched to the
+  VQC's 18 parameters, capacity + convexity comparator)
+- **Arm 4 (VQC + FedAvg): full sweep complete.** VQC trained properly
+  (sanity-checked before trusting any accuracy number). Worst-client
+  accuracy declines monotonically with α, magnitude between the convex
+  and non-convex classical references — see `docs/arm4_report.md`.
+- **Arm 5 (VQC + circular-mean aggregation): built, sweep running** —
+  results pending.
+- 5-fold stratified CV protocol (10 seeds), identical across all arms —
+  noise floor ~0.3–1.0pp, down from ~3.1pp
+- Resumable, crash-safe experiment logging, validated with a real
+  process-kill test (classical grid) and in production over a real
+  9-hour unattended run (Arm 4)
 
-**Validation status:** the original Arm 1/Arm 2 gates (D-024) mostly pass;
-the flat α-sweep on *global* accuracy was investigated in a dedicated
-diagnostic session and found to be real but incomplete, not a bug — see
-`docs/diagnostic_report.md`. **Worst-client accuracy declines
-monotonically with α for both models, and client parameter divergence
-rises monotonically with α for both models** — the heterogeneity penalty
-this project measures is present, it just doesn't show up in a pooled
-global-accuracy score. The natural 4-site partition does not exceed the
-synthetic Dirichlet range on any metric (answers objective D-009).
+**Primary metric (D-029/D-030): worst-client accuracy, reported first.**
+Global accuracy is secondary. Rationale: global accuracy is flat across
+the entire α sweep for the convex reference and stays near-flat for the
+matched MLP except at the most extreme skew, while worst-client accuracy
+declines monotonically for every model tested (LR, MLP, VQC) — the
+heterogeneity penalty this project measures is a distributional effect on
+individual clients, largely invisible in a pooled global score.
 
-**Not started:** Arm 3 (FedProx), Arm 4 (VQC + FedAvg — the headline arm),
-Arm 5 (VQC + circular-mean aggregation, timeboxed). Per `docs/INTERFACE.md`,
-these should be addable without modifying the existing loop or aggregator.
-No decision yet on which accuracy metric (global vs. worst-client) is the
-headline metric going forward — that's an open interpretive call, not a
-technical blocker.
+**Headline comparison so far:** the VQC's worst-client decline (7.25pp,
+α=100→0.1) does **not** fall faster than the matched MLP's (18.46pp) — it
+sits between the MLP and the convex LR reference. Wall-clock cost: ~13,300x
+the MLP's, per training run, on this simulator. Full numbers:
+`docs/arm4_report.md`.
+
+**Not started:** Arm 3 (FedProx) — in progress on a teammate's branch in
+parallel; this branch does not touch `federated_loop.py`, `data_loader.py`,
+`partitioner.py`, `docs/INTERFACE.md`, or any quantum file, by agreement.
 
 **Known open items:** decision IDs D-009–D-014 are referenced in project
 history but not recorded in `docs/decisions.md` — see
-`docs/decisions_index.md` for the specifics.
+`docs/decisions_index.md` for the specifics. Arm 5 results pending.
 
 ## Repository map
 

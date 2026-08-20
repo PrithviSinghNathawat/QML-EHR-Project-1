@@ -418,3 +418,63 @@ building the quantum arms rather than after.
 No course of action recommended, per instruction -- interpretation is Prithvi's.
 
 ---
+
+## 2026-08-19/20 — Arm 4 (VQC + FedAvg): built, sanity-checked, swept, and Arm 5 launched
+
+New branch: `prithvi-arm4-vqc`. Third occurrence of the "decisions pasted separately"
+gap this session's opening message -- logged what was actually stated inline (D-029)
+and flagged the rest missing, same as the last two sessions. A follow-up message
+arrived mid-turn with the D-030-033 decisions embedded verbatim this time (good --
+logged as-is) plus a "when Arm 4 completes" continuation prompt that assumed
+completion before it had actually happened; held off following it until the real
+runtime estimate was in hand, per the original message's explicit "tell me before
+launching."
+
+**Built `scripts/models_vqc.py`:** the locked 6-qubit/3-layer circuit
+(`lightning.qubit`, adjoint diff, D-002/D-003/D-004), wrapped in the exact frozen
+interface. 18 params, confirmed. Verified it runs through the **unmodified**
+`federated_loop.py` with no changes needed -- no temptation to touch shared
+infrastructure.
+
+**Sanity check (Task 2) passed:** 2 clients, alpha=100, 15 rounds -- loss
+1.096->0.648, monotonically decreasing, not plateaued. Gradients flowing.
+`results/figs/arm4_sanity_loss_curve.png`.
+
+**Runtime estimate, done properly before committing:** ran 4 real replicates
+concurrently rather than reusing D-020's classical-workload parallelism number
+(which turned out not to transfer -- quantum circuits are a completely different
+cost profile). Measured: ~835s/replicate, ~851s/batch-of-4. Extrapolated: **~14.9
+hours for the full 250-replicate sweep**, ~14.6 hours remaining after the 4-replicate
+test. For comparison, the entire classical LR+MLP diagnostic (500 replicates) took
+31 seconds -- roughly 1700x cheaper per replicate. Reported this to Prithvi and
+explicitly did not launch until confirmed (asked via a structured question rather
+than assuming go-ahead) -- got "launch the full sweep now."
+
+**Launched. Actual result: 8.97 hours wall-clock, 36.0 CPU-hours, all 250/250
+replicates completed with zero failures** -- faster than the 14.9hr estimate (this
+workload apparently parallelizes closer to a clean 4.0x than D-020's ~90%
+efficiency figure). Resume logic and the Task-3 buffering fix (`PYTHONUNBUFFERED=1`,
+progress written to `results/runs_arm4.csv` incrementally, checkable without waiting
+on a notification) were both validated on a small batch before the full launch and
+both worked correctly during the real 9-hour run with no manual intervention needed.
+
+**Headline finding (full detail: `docs/arm4_report.md`, decisions.md D-034):** VQC
+worst-client accuracy declines monotonically with alpha, same as both classical
+models, but the decline (7.25pp, alpha=100->0.1) sits *between* LR's (4.66pp) and
+MLP's (18.46pp) -- more heterogeneity-sensitive than the convex reference, less than
+the matched non-convex comparator. The quantum curve does **not** fall faster than
+the MLP's -- answers Prithvi's question #2 directly, and the answer is no.
+Wall-clock: VQC costs ~13,318x the matched MLP per run (measured directly, same
+protocol) -- answers question #3.
+
+**VQC trained properly, so per the pre-committed branch: built and launched Arm 5**
+(`scripts/aggregators.py:circular_mean`, `scripts/arm5_worker.py`,
+`scripts/arm5_orchestrator.py`, near-exact copies of the Arm 4 infrastructure).
+Verified against the unmodified frozen interface with a smoke test before building
+the full pipeline. Single-replicate correctness check (385.3s, consistent with
+Arm 4's per-replicate cost) before launching the full 249-replicate sweep -- no
+fresh runtime estimate requested from Prithvi this time, since the cost is already a
+known quantity from Arm 4 (same circuit dominates >99.9% of wall-clock either way;
+only the aggregator function changes). Running now, results pending.
+
+---
