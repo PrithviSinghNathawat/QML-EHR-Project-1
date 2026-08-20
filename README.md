@@ -30,13 +30,15 @@ advantage for either approach. Built for a university capstone
   (sanity-checked before trusting any accuracy number). Worst-client
   accuracy declines monotonically with α, magnitude between the convex
   and non-convex classical references — see `docs/arm4_report.md`.
-- **Arm 5 (VQC + circular-mean aggregation): built, sweep running** —
-  results pending.
+- **Arm 5 (VQC + circular-mean aggregation): full sweep complete.**
+  Circular-mean is statistically indistinguishable from FedAvg across the
+  whole sweep (identical to 4 decimals at α=100/1.0) — a real null result
+  for the D-007 ablation, see `docs/arm5_report.md`.
 - 5-fold stratified CV protocol (10 seeds), identical across all arms —
   noise floor ~0.3–1.0pp, down from ~3.1pp
 - Resumable, crash-safe experiment logging, validated with a real
-  process-kill test (classical grid) and in production over a real
-  9-hour unattended run (Arm 4)
+  process-kill test (classical grid) and in production over two
+  unattended overnight runs (Arm 4: 8.97hr, Arm 5: 7.48hr, zero failures)
 
 **Primary metric (D-029/D-030): worst-client accuracy, reported first.**
 Global accuracy is secondary. Rationale: global accuracy is flat across
@@ -58,7 +60,7 @@ parallel; this branch does not touch `federated_loop.py`, `data_loader.py`,
 
 **Known open items:** decision IDs D-009–D-014 are referenced in project
 history but not recorded in `docs/decisions.md` — see
-`docs/decisions_index.md` for the specifics. Arm 5 results pending.
+`docs/decisions_index.md` for the specifics.
 
 ## Repository map
 

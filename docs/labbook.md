@@ -478,3 +478,34 @@ known quantity from Arm 4 (same circuit dominates >99.9% of wall-clock either wa
 only the aggregator function changes). Running now, results pending.
 
 ---
+
+## 2026-08-20 — Arm 5 completed overnight; push blocked then resolved; summary
+
+**Arm 5 sweep completed while unattended:** 250/250 replicates, 7.48hr wall-clock
+(29.12 CPU-hr), no failures. Wasn't analyzed immediately -- a `git push` attempted
+right after Arm 4's results landed failed with a 403: this machine's cached GitHub
+credential belonged to `01ayuvi`, not `PrithviSinghNathawat`, and that account
+didn't have write access to the repo. Nothing was lost (commits stayed local); asked
+Prithvi how to resolve it and held everything (including the not-yet-analyzed Arm 5
+results) rather than guessing or working around the credential issue. Prithvi logged
+back in as himself; push succeeded immediately on retry.
+
+**Arm 5 result, analyzed after the credential fix:** circular-mean aggregation is
+**statistically indistinguishable from FedAvg** across the whole sweep -- identical
+to 4 decimal places at alpha=100/1.0, sub-noise differences elsewhere, on worst-client
+accuracy, global accuracy, and divergence alike. Most likely explanation: circular
+mean only differs numerically from a linear mean near the angle-wraparound boundary,
+and this training regime (small LR, narrow init, modest rounds) probably never gets
+the parameters there. Reportable as a real null result (250 replicates, not a
+small-sample fluke), not as "inconclusive." Full writeup: `docs/arm5_report.md`,
+decisions.md D-036.
+
+**Overnight arc, end to end:** Arm 4 sanity-checked (loss decreasing, not a barren
+plateau) -> real 4-replicate timing test (~14.9hr estimated) -> confirmed with
+Prithvi before launching -> full Arm 4 sweep, 8.97hr, 250/250, worst-client decline
+between LR and MLP in magnitude, VQC does not degrade faster than the matched MLP ->
+VQC trained properly so Arm 5 built and launched per the pre-committed branch,
+7.48hr, 250/250 -> circular-mean vs FedAvg: no measurable difference. Everything
+pushed to `prithvi-arm4-vqc`, PR opened.
+
+---

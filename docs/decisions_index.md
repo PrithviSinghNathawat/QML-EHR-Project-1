@@ -41,6 +41,7 @@ alternatives; this table is a lookup, not a substitute.
 | D-033 | 2026-08-19 | Protocol: 5-fold stratified CV x 10 seeds (named protocol decision) |
 | D-034 | 2026-08-20 | Arm 4 (VQC+FedAvg) results: trained properly, penalty magnitude between LR and MLP |
 | D-035 | 2026-08-20 | Arm 5 (VQC + circular-mean aggregation) built and launched |
+| D-036 | 2026-08-20 | Arm 5 results: circular-mean aggregation makes no measurable difference vs FedAvg |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the

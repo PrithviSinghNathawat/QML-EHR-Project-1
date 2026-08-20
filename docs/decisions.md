@@ -818,3 +818,28 @@ not the bottleneck). Results land in `results/runs_arm5.csv`
 after merging, same pattern as Arm 4) -- reported once the sweep completes.
 
 ---
+
+## D-036 · 2026-08-20 — Arm 5 results: circular-mean aggregation makes no measurable difference
+
+**What:** Full 250-replicate sweep completed (7.48hr wall-clock, 29.12 CPU-hr).
+Full writeup: `docs/arm5_report.md`.
+
+**Result:** circular-mean aggregation produces worst-client accuracy, global
+accuracy, and client divergence essentially identical to FedAvg (Arm 4) at every
+condition -- identical to 4 decimal places at alpha=100 and alpha=1.0, differences
+in the 3rd decimal elsewhere, smaller than run-to-run seed noise. A reportable null
+result, not an inconclusive one (250 replicates, tight agreement across the whole
+sweep).
+
+**Why, most likely:** circular mean only diverges numerically from a linear mean
+near the angle wraparound boundary. Given the trained parameters (small learning
+rate, narrow initialization, modest round count) most likely never range that
+widely, the two aggregators end up computing near-identical averages in this
+regime. Not verified by directly inspecting parameter trajectories -- a plausible
+explanation, not a proven one.
+
+**Answers the D-007 ablation:** circular-mean aggregation does not change
+worst-client degradation relative to FedAvg in this data. The aggregator choice is
+not what determines VQC heterogeneity sensitivity at this scale.
+
+---
