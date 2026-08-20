@@ -480,3 +480,45 @@ point of the pairing) surfaced the color-consistency bug, and only zooming into 
 actual PNG (not just "did it save without crashing") surfaced the label collision.
 
 ---
+
+## 2026-08-20 (continued) — gh account switching is a shared, machine-wide race condition
+
+**What happened:** the HTTPS credential Windows Git Credential Manager was returning
+for github.com resolved to `PrithviSinghNathawat`, not Ayuvi's account, even though the
+commits being made were correctly authored as Ayuvi (author identity is local `git
+config`, unaffected by which account performs the push). Verified this safely -- via
+the GitHub API using the cached credential, printing only the resulting `login` field,
+never the token itself -- rather than by enumerating stored credentials directly.
+
+Fixed with `gh auth switch --user 01ayuvi` + `gh auth setup-git` (routes git's HTTPS
+credential resolution through `gh`'s active account instead of the separate Credential
+Manager cache). Re-verified via the same API check: resolved to `01ayuvi` correctly.
+
+**Then found a second, more surprising problem:** `01ayuvi` has no push access to
+`PrithviSinghNathawat/QML-EHR-Project-1` at all (403 permission denied on `git push`) --
+not a credential-selection issue, an actual missing-collaborator issue. Ayuvi pushed the
+branch herself via her own separate access. A PR (#1) was opened from that branch, and
+-- given the new direct-to-main workflow decided this session -- merged into `main`
+immediately after.
+
+**The actual surprise:** `gh`'s active account is a single global setting for the whole
+machine, not scoped per terminal/session. Between confirming `01ayuvi` was active (via
+the API check) and running `gh pr merge`, the active account silently reverted to
+`PrithviSinghNathawat` -- almost certainly because this is a shared machine and another
+process/session switched it back in between. The merge commit (`0439074`) is therefore
+attributed to `PrithviSinghNathawat`'s GitHub account, not Ayuvi's, even though the
+actual content commit it merged (`9172071`) is correctly authored as her. Low practical
+impact -- merge commits aren't content contributions, and `git shortlog -sn` still shows
+her 2 real commits under her own name -- but worth knowing: on this shared machine, `gh
+auth status` should be re-checked immediately before every push/merge, not just once per
+session, since the other person's terminal can flip it back at any time.
+
+**New standing workflow, agreed this session:** direct-to-main pushes, no more feature
+branches or PRs (both people work on non-overlapping files in separate clones, so branch
+isolation was adding friction without much benefit). `git pull origin main` at the start
+of every session (whichever clone was idle is the stale one). Attribution check (`gh
+auth status`, `git config user.email`, `git log -1 --format='%an <%ae>'`) before every
+push, not just once per session, given the race condition just found. Small, logical
+commits with conventional messages, not one large end-of-session commit.
+
+---
