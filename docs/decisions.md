@@ -742,3 +742,44 @@ built once from the full (arm, model) key set before any alpha-filtering, reused
 both figures.
 
 ---
+
+## D-031 · 2026-08-20 — Reframing: worst-client degradation is cited, not claimed (Ayuvi)
+
+**What:** The project's central empirical pattern -- global accuracy flat/mildly
+declining under non-IID skew while worst-client accuracy collapses -- is confirmed
+prior art, not this project's discovery. Directly verified: q-FFL (Li, Sanjabi,
+Beirami, Smith, ICLR 2020), Appendix Table 10 ("Effects of data heterogeneity and the
+number of devices on unfairness"), reports the same shape under FedAvg (q=0): Average
+accuracy 89.2%->83.0%->82.6% vs. Worst-10% accuracy 70.9%->36.8%->25.5% as heterogeneity
+increases (Synthetic IID -> (1,1) -> (2,2), 100 devices). This is the same paper
+already cited in D-029 for its q-FFL method, whose appendix hadn't been checked at that
+point.
+
+**Why this is a decision and not just a citation update:** it changes how the Results
+section must be written. "We find that worst-client accuracy degrades sharply while
+global accuracy stays flat" is a discovery claim and is no longer accurate to make
+unqualified -- it must be written as replication of an established 2020 result, on a
+new data modality (EHR tabular, Dirichlet-α skew) and extended to a new comparison
+(quantum vs. classical) that q-FFL does not address.
+
+**Relationship to the existing guardrail:** `CLAUDE.md`'s guardrail section already
+states this is a characterization study, not a claim of novelty in the headline
+quantum-vs-classical result. D-031 does not introduce a new constraint -- it makes that
+guardrail concrete for a specific piece of the paper (the worst-client/global-accuracy
+contrast, independent of the quantum question) that could otherwise have been written
+as if it were an original observation, the way D-028's diagnostic report language
+("we observed") could read if quoted without this context.
+
+**Not yet resolved:** whether NIID-Bench (Li, Q. et al., ICDE 2022) independently
+reports the same pattern under Dirichlet-α skew specifically (as opposed to q-FFL's
+synthetic non-IID construction) -- would be a more directly comparable prior-art source
+for this project's exact partitioning method. Flagged as an open item in
+`docs/labbook.md`, not resolved here.
+
+**Alternatives rejected:** leaving the citation as a general "related work" mention
+(D-029's original framing) without this appendix-table-level verification was
+considered sufficient until this session -- rejected once the specific quantitative
+match was found, since a vague "this has been studied before" citation is weaker
+protection against an accidental discovery claim than a specific, checked source.
+
+---

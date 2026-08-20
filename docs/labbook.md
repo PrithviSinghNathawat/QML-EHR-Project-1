@@ -522,3 +522,40 @@ push, not just once per session, given the race condition just found. Small, log
 commits with conventional messages, not one large end-of-session commit.
 
 ---
+
+## 2026-08-20 (continued) — FL fairness prior art confirmed: worst-client finding is a replication, not a discovery
+
+**Searched further for prior art on the worst-client/global-accuracy contrast** beyond
+the initial literature pass (D-029). Confirmed directly: **q-FFL (Li et al., ICLR 2020)
+Appendix Table 10** ("Effects of data heterogeneity and the number of devices on
+unfairness") already reports this exact pattern. Under FedAvg (q=0), as heterogeneity
+increases across their synthetic settings (IID -> (1,1) -> (2,2), 100 devices): Average
+accuracy declines only mildly (89.2% -> 83.0% -> 82.6%) while Worst-10% accuracy
+collapses (70.9% -> 36.8% -> 25.5%). That is our finding's shape, published in 2020, in
+the same paper we'd already cited for its headline q-FFL method (D-029) without having
+checked its appendix tables specifically.
+
+**Consequence, stated plainly: the Results section must be written as replication, not
+discovery.** The heterogeneity penalty we measure (global accuracy flat/mild decline,
+worst-client accuracy collapsing) is established prior art as of ICLR 2020. Our
+contribution is confirming this specific pattern on EHR tabular data under Dirichlet-α
+skew (rather than q-FFL's synthetic non-IID construction), and extending the comparison
+to a variational quantum classifier, which q-FFL does not touch. D-029's framing already
+pointed this direction (via Naseer & Shoaib, 2026); this finding makes it concrete and
+sourced to the original, foundational instance of the phenomenon rather than only a
+recent echo of it.
+
+**Verification note:** initial automated extraction (arXiv HTML) of the q-FFL paper
+missed Table 10 entirely and reported tables jumping from 9 to 11 -- an unreliable
+negative result from that tool, not evidence the table doesn't exist. Confirmed instead
+by direct visual inspection of the actual table. Worth remembering for any future
+"paper X doesn't report Y" claim: a tool's failure to find something is not the same as
+its absence.
+
+**Open item, not resolved this session:** whether NIID-Bench (Li, Q. et al., ICDE 2022)
+logs per-client accuracy under its own Dirichlet sweep -- if it does, that would be a
+second, more directly comparable (Dirichlet-based, not q-FFL's synthetic construction)
+prior-art source for the same pattern, and should be checked before the Results section
+is drafted.
+
+---
