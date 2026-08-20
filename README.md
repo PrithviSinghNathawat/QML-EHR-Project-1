@@ -12,7 +12,7 @@ advantage for either approach. Built for a university capstone
 
 ## Status
 
-*Last updated 2026-08-18 — keep this section honest and current; see
+*Last updated 2026-08-20 — keep this section honest and current; see
 `docs/labbook.md` for the session that produced this state.*
 
 **Implemented and validated:**
@@ -28,6 +28,14 @@ advantage for either approach. Built for a university capstone
 - 5-fold stratified CV protocol (10 seeds), replacing the original single
   train/test split — noise floor ~0.3–1.0pp, down from ~3.1pp
 - Resumable, crash-safe experiment logging to `results/runs.csv`
+- `scripts/plots.py`: worst-client accuracy, global accuracy, and client
+  divergence vs. α figures (dpi=200), extensible to new arms by adding a
+  source file path, degrades gracefully when an arm's results file doesn't
+  exist yet (D-030)
+- FL fairness / worst-client-disparity literature search (D-029,
+  `docs/reference/fl_fairness_literature.md`) — establishes that the
+  worst-client-vs-global-accuracy gap is a known phenomenon in the FL
+  fairness literature, not a novel finding of this project
 
 **Validation status:** the original Arm 1/Arm 2 gates (D-024) mostly pass;
 the flat α-sweep on *global* accuracy was investigated in a dedicated

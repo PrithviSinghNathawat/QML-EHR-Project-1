@@ -418,3 +418,65 @@ building the quantum arms rather than after.
 No course of action recommended, per instruction -- interpretation is Prithvi's.
 
 ---
+
+## 2026-08-20 — Ayuvi's first session: onboarding, isolated environment, literature search, plots.py
+
+**Environment note (not project-technical, but worth recording):** a session
+transcript that appeared to be Ayuvi onboarding into this repo was actually running
+inside Prithvi's own working copy (`D:\qml-ehr`, branch `prithvi-arm4-vqc`, with his
+uncommitted Arm 4 work sitting in the tree). Caught before touching anything, by
+noticing the working directory and git identity didn't match what the onboarding
+brief described. Set up a true sibling clone at `D:\qfl-ayuvi` instead, with its own
+venv (Python 3.11.5, pennylane/pennylane-lightning/torch/scikit-learn/pandas/
+matplotlib) and local git identity, isolated from Prithvi's checkout. `gh` CLI is not
+installed on this machine, so the exact `gh auth status` attribution check from the
+brief couldn't be run as written -- verified commit attribution the available way
+instead (local `git config` + `git log --format='%an <%ae>'` after an actual push),
+and flagged the `gh` gap rather than skipping the check silently.
+
+**Housekeeping:** `venv/` wasn't covered by the existing `.venv/`-only gitignore entry
+-- fixed, confirmed with `git status` that the venv no longer shows as untracked,
+pushed directly to `main` (trivial hygiene, no branch, as instructed). Attribution
+check after that push: `git log` shows both `PrithviSinghNathawat` (6 commits) and
+`Ayuvi Chaudhary` (1 commit) -- two contributors present, check passes. (`git
+shortlog -sn` itself produced no output in this shell for an unclear reason --
+`git log --format='%an <%ae>' | sort | uniq -c` used instead and gave the same
+information.)
+
+**Orientation (Task 1):** read `CLAUDE.md`, `docs/INTERFACE.md`,
+`docs/diagnostic_report.md`, `scripts/federated_loop.py`, `scripts/run_grid.py`,
+`scripts/models.py`, `scripts/partitioner.py`. Reproduced the recorded Arm 2,
+alpha=100, seed=0 result from scratch (0.7880, matching `results/runs.csv` exactly)
+as a live demo of the pipeline and the "same seed twice -> identical output"
+validation gate -- without writing to `runs.csv`, using a throwaway script outside
+the repo.
+
+**Literature search (Task 2):** full results in D-029 / `docs/reference/
+fl_fairness_literature.md`. Headline: Naseer & Shoaib (arXiv:2605.08992, 2026)
+already report the same worst-client-vs-global-accuracy pattern D-028 found, via a
+controlled label-skew sweep, on text classification. Our paper's contribution needs
+to be framed as confirming this on EHR data and extending it to quantum vs.
+classical, not as discovering the gap.
+
+**plots.py (Task 3):** full design rationale in D-030. Built against
+`diagnostic_results.csv`/`diagnostic_divergence.csv` (not `runs.csv`, which lacks
+per-client granularity). Caught two real bugs by actually looking at the rendered
+PNGs, not just checking the script ran without error: (1) natural-partition text
+annotations overlapped illegibly and got clipped past the axes edge when several
+series clustered close together -- moved into the legend; (2) Arm 1 got a phantom
+empty legend entry in the global-accuracy figure (it has no alpha-conditioned global
+rows, since it isn't partitioned) -- fixed by skipping empty series before plotting.
+Also found and fixed a color-consistency bug across the figure pair: Arm 2 was a
+different color in each figure because matplotlib's color cycle is per-axes and Arm
+1 drops out of the global-accuracy figure, shifting the cycle. Built an explicit
+shared color map instead. Verified the "handle missing arm data gracefully"
+requirement directly, by adding a nonexistent `results/runs_arm4.csv` path to the
+source list and confirming it warns and skips rather than crashing.
+
+**Genuinely surprising part:** how much the figures changed on inspection versus on
+first successful run. The script produced no errors on the very first try and looked
+fine in isolation; only comparing figure 1 against figure 2 side by side (the whole
+point of the pairing) surfaced the color-consistency bug, and only zooming into the
+actual PNG (not just "did it save without crashing") surfaced the label collision.
+
+---

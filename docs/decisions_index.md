@@ -34,6 +34,8 @@ alternatives; this table is a lookup, not a substitute.
 | D-026 | 2026-08-18 | MLP parameter count: 17, matched to the real VQC (18), not the requested ~36 |
 | D-027 | 2026-08-18 | `run_federated` interface amendment: optional divergence tracking |
 | D-028 | 2026-08-18 | Diagnostic session findings: heterogeneity penalty exists, measured in the wrong place |
+| D-029 | 2026-08-20 | Worst-client/global-accuracy gap is not novel; literature grounding (Naseer & Shoaib 2026 closest match) |
+| D-030 | 2026-08-20 | `plots.py` design: data source, worst-client definition, natural-partition legend, shared series colors |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the
