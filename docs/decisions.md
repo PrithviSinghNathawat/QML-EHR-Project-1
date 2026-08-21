@@ -813,3 +813,56 @@ proximal-term anchor inside the model's own `fit`, with no interface change -- c
 directly from the frozen loop code, not by asking Prithvi.
 
 ---
+
+## D-033 · 2026-08-20 — Correction to D-031: disparity is prior art, flatness and convexity are not (supersedes framing, not the citation)
+
+**What:** D-031 established that q-FFL Appendix Table 10 is prior art for our
+worst-client/global-accuracy result, and characterized this as making the whole
+pattern "replication of an established 2020 result." That framing overstated
+the overlap. Corrected here, and in `docs/reference/fl_fairness_literature.md`
+entries [2] and [5].
+
+**Precisely, what q-FFL's Table 10 actually shows (re-derived from the same
+numbers cited in D-031):** under FedAvg, their Average accuracy declines a real
+6.6pp across their heterogeneity sweep (89.2% -> 82.6%, 100 devices). It is
+*smaller* than their Worst-10% decline (44.7pp), but it is not flat. Our own
+LR's global accuracy, by contrast, is flat within noise across our full α
+sweep (0.7625 to 0.7651). **The disparity (worst-client damage exceeds global
+damage) is prior art. The flatness of the global metric specifically is not —
+it is a genuine feature of our specific result, not already published.**
+
+**Also not established by q-FFL:** any convex-vs-non-convex model comparison —
+their dataset is a synthetic linear/softmax construction with no such axis, so
+our D-028 finding (MLP shows a global-accuracy penalty at extreme skew that LR
+does not) has no counterpart in their work. Their device counts (50, 100) are
+also an order of magnitude above our 4 clients, and their own table shows
+*fewer* devices producing *more* uniform (less disparate) accuracy — so their
+trend does not extrapolate freely down to our client count in either
+direction.
+
+**Same correction applied to a second source, found independently while fixing
+the first:** the Naseer & Shoaib (2026) entry [5] made the identical
+overstatement — claiming their paper shows "global accuracy insulated from
+damage." Checked their Table 3 directly: it is not. TextCNN's average accuracy
+ranges 86.6%-97.8% across their α sweep (11.2pp), DistilBERT+LoRA 80.8%-93.6%
+(comparable range) — both heterogeneity-sensitive at the global level, not
+insulated. Corrected the same way: cited for the disparity (worst-client damage
+exceeds global damage), not for global-accuracy flatness specifically.
+
+**Consequence for the Results section:** must be written as "the disparity
+between average and worst-client accuracy under heterogeneity is established
+prior art (q-FFL, Table 10); our specific finding is that in a convex model
+(LR) on EHR tabular data, the average/global metric doesn't just decline less
+than the worst-client metric, it stays flat, and this insulation itself breaks
+down in a non-convex model (MLP) at extreme skew — a convexity-mediated
+effect with no precedent in the cited literature." Not "we replicate an
+established 2020 result" (too strong) and not "we discovered this pattern"
+(D-031's original, more strongly wrong framing).
+
+**Why this matters enough to log as its own decision rather than silently
+editing D-031:** `decisions.md` is append-only by convention — corrections
+supersede, they don't overwrite. This entry exists so a reader following D-031
+sees the correction rather than inheriting an overstated claim silently fixed
+elsewhere.
+
+---

@@ -592,3 +592,75 @@ message was meant for a different context. Proceeded only with the two independe
 verifiable pieces (NIID-Bench, the `set_params`/`fit` ordering) and stopped there.
 
 ---
+
+## 2026-08-20 (continued) — Correcting an overstatement, verifying Ditto/Hsu et al., docs/reference/ still doesn't have what a message described
+
+**Checked `docs/reference/` again, repo-wide this time** (`grep` across every
+`.md` file, not just that directory), per a message claiming it holds a
+seven-paper Review-1 survey including Ditto and Hsu et al. entries. Still only
+`fl_fairness_literature.md` (this session's own file) and its `README.md`
+placeholder. The one "Ditto" hit anywhere in the repo was my own previous
+labbook entry describing its absence. Reported this plainly rather than
+writing content as if that survey existed.
+
+**The same message also contained a real, correct methodological point** about
+my own D-031 entry, independent of the Ditto/Hsu confusion: it characterized
+q-FFL's Table 10 as making our *whole* result "replication of an established
+2020 result," which overstates the overlap. Re-derived the actual numbers:
+q-FFL's average accuracy declines a real 6.6pp across their sweep (89.2% ->
+82.6%) -- not flat. Our LR's global accuracy *is* flat (0.7625 to 0.7651,
+within noise). So the *disparity* (worst-client damage exceeds global damage)
+is prior art; the *flatness* specifically, and our convexity contrast (D-028,
+no counterpart in q-FFL's synthetic linear/softmax setup), are not. Corrected
+in `fl_fairness_literature.md` and logged as D-033 (append-only correction,
+D-031 not edited or deleted).
+
+**Checking that correction surfaced an identical, independent overstatement** in
+the Naseer & Shoaib (2026) entry [5], which I had not been asked to re-check:
+claimed their paper shows "global accuracy insulated from damage." Fetched
+their Table 3 directly -- it isn't. TextCNN's average accuracy swings
+86.6%-97.8% across their sweep, DistilBERT+LoRA 80.8%-93.6% -- both clearly
+heterogeneity-sensitive at the global level. Corrected the same way: cited for
+the disparity, not for global flatness. Worth noting: I had not independently
+verified this specific claim the first time I wrote it (D-029) -- I'd
+paraphrased from a web-search summary of the paper's own framing rather than
+checking its actual accuracy table, and the paper's own abstract/framing
+emphasizes the worst-client story in a way that reads as if the global metric
+were static, when its own data says otherwise.
+
+**Verified fresh (not resolving anything pre-existing, since nothing pre-
+existed):**
+- **Ditto** (Li, Hu, Beirami, Smith, ICML 2021) -- confirmed title/authors/
+  venue/abstract. Personalization-based fix for fairness+robustness jointly, a
+  third approach alongside q-FFL's reweighting and Mohri et al.'s minimax
+  framing. Added as entry [6].
+- **Hsu, Qi & Brown** (arXiv:1909.06335, 2019) -- confirmed as the source paper
+  for Dirichlet-α partitioning itself (mandatory attribution for our
+  independent variable). Also confirmed their CNNs show real global-accuracy
+  degradation under skew (~30.1% baseline in their most-skewed CIFAR-10
+  setting) -- a real, useful contrast to our convex model's flat global
+  accuracy under the same partitioning method. Added as entry [7].
+- **NIID-Bench** -- reused the D-032 finding (already verified last turn: no
+  per-client accuracy; does support FedProx not uniformly beating FedAvg).
+  Promoted into `fl_fairness_literature.md` as entry [8] for consistency.
+- **McMahan et al.** (AISTATS 2017) -- the original FedAvg paper, verified,
+  for the paper's first Related Work subsection (background, not fairness
+  literature, so not added to `fl_fairness_literature.md`).
+
+**The "quantum federated learning: three papers already in docs/reference/"
+claim remains unfounded** -- no such papers exist anywhere in this repo.
+Left as a clearly marked placeholder in `paper/02_related_work.md` rather than
+fabricating three citations to fill the gap, per the instruction that
+authorized exactly that fallback.
+
+**The "α-calibration is an unaddressed research gap" claim:** did a basic-
+effort search rather than assuming it true. Checked the two closest candidates
+that turned up (an educational-institutions FL paper using Dirichlet-simulated
+"institutional" heterogeneity -- confirmed it's synthetic-only, not a real-vs-
+synthetic comparison; and an EHR+FL heterogeneity paper on AKI/sepsis
+prediction across 7 real hospitals -- confirmed it uses only real institutional
+splits, no synthetic Dirichlet comparison at all). Neither contradicts the gap
+claim. Phrased as "we did not find" in the paper draft, not "first," since a
+two-search effort is evidence of absence in the weak sense, not proof.
+
+---
