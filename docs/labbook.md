@@ -628,3 +628,53 @@ running in the background; reporting back before Step 4 (capacity scatter) once 
 completes.
 
 ---
+
+## 2026-08-20 — VQC decomposition result, prediction resolved, two D-entries superseded, capacity scatter blocked by its own contingency
+
+Prithvi asked to log the prediction before reading the numbers: if the VQC is
+genuinely low-capacity, composition share should resemble LR's (~82%) and the
+residual should shrink; if the residual stays substantial, the confound weakens.
+Logged verbatim as D-043 before computing anything from the 50 completed replicate
+files.
+
+**Then computed it.** VQC composition-only decline (alpha=100->0.1): 8.50pp, vs an
+observed decline of 7.25pp -- composition alone *exceeds* the observed movement
+(117.2%), giving a residual of -1.25pp. Paired per-replicate check (n=50, matched by
+seed/fold): mean paired residual -0.0124, SE 0.0107 -- not strongly distinguishable
+from zero, clearly not substantially positive. The prediction's "genuinely
+low-capacity" branch is confirmed, more decisively than predicted (VQC's composition
+share exceeds LR's). Logged as D-044.
+
+**Composition-only decline also differs meaningfully across the three fixed models**
+(LR 3.82, MLP 4.99, VQC 8.50pp) despite all three seeing identical test slices.
+Checked the obvious hypothesis (prediction confidence) directly rather than asserting
+it -- doesn't hold: MLP's alpha=100 model is actually *more* confidently separated
+than LR's (mean |P-0.5| 0.29 vs 0.23), yet still shows the larger composition swing.
+Checked class-recall asymmetry too -- similar for both (8.7pp vs 7.3pp gap), doesn't
+explain it either. Reported honestly that the LR-vs-MLP gap doesn't trace to a single
+clean factor found here, rather than forcing a tidy story. VQC's much larger swing is
+most simply attributable to it being the weakest baseline of the three (64.9% vs ~69%).
+
+**Task 1 (supersede D-028/D-034):** did not edit either entry -- appended D-045
+(supersedes D-028's LR claim: the "penalty exists, wrong measurement location"
+framing was overstated for LR specifically, though correct for MLP) and D-046
+(supersedes D-034's "VQC sits between LR and MLP" claim: true of the observed number,
+not true of the underlying mechanism -- there's no genuine intermediate
+training-heterogeneity sensitivity, just a lower baseline producing a larger
+composition swing with no real training effect on top). Also logged D-047, framing
+the Arm1/Arm2 pooling bug (D-040) explicitly as the argument for the project's
+reproducibility rule, per Prithvi's note that it belongs in Methodology -- the bug
+was invisible for two days across three published reports until the numbers were
+regenerated from committed code and diffed.
+
+**Task 2 (capacity scatter): blocked by its own pre-declared contingency, not run.**
+The instructions were explicit: "If most of the VQC's decline turns out to be
+composition, tell me before running." It is (117%). Not launching the 3000-run MLP
+width sweep -- reporting this and waiting, per the contingency, rather than treating
+"proceed as scoped" as the default when its own precondition wasn't met.
+
+**Merging and pushing everything else** (Arm 4, Arm 5, the persisted analysis module,
+the decomposition, all decision updates) into `main` now, per instruction -- this part
+was not contingent on the scatter.
+
+---

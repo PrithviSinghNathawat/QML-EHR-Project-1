@@ -1034,3 +1034,153 @@ before launching (seed=0/fold=0/alpha=100 retrained, bit-identical to
 **Committed locally, not pushed, per instruction.**
 
 ---
+
+## D-043 · 2026-08-20 — Pre-registered prediction: VQC composition-vs-training decomposition
+
+**What:** Recording a prediction before reading the VQC composition decomposition
+result, which finished computing (50/50 replicates, 5616.7s) but has not yet been
+analyzed as of this entry. Pre-registered by Prithvi, logged verbatim in intent:
+
+If the VQC is genuinely low-capacity, its composition share should resemble LR's
+(~82%) and its 7.3pp observed worst-client decline should shrink to something small
+once the composition-only component is subtracted out. If instead the residual
+(training-effect) component stays substantial, the capacity confound explanation for
+the VQC's smaller-than-MLP degradation weakens considerably -- because it would mean
+the VQC's decline is mostly a real training-heterogeneity effect, not an artifact of
+being a weak/near-constant predictor scored against skewed slices, the same way MLP's
+is mostly real.
+
+**Why this is the prediction that matters most:** every other prediction in this
+project's decision log has been about a specific mechanism (wraparound boundary,
+E=1 degeneracy, etc.); this one is about whether the entire capacity-confound
+concern that motivated D-037's redesign (D-039's rejection of the accuracy-axis
+framing, the pending Step 4 parameter-count scatter) is still live at all. A small
+VQC residual would suggest the scatter is designed around an effect that's mostly
+not there. A substantial residual keeps the original question open and the scatter
+meaningful as scoped.
+
+**Result to follow in the next entry, computed after this one was written.**
+
+---
+
+## D-044 · 2026-08-20 — VQC composition decomposition result: prediction resolved, capacity confound not weakened
+
+**What:** Completed the composition-only decomposition for VQC (50 replicates, alpha=100
+training only, evaluated against all 5 conditions' test-slice composition,
+`scripts/vqc_composition_worker.py`). Full comparison against the pre-registered
+prediction (D-043):
+
+| model | observed decline (a=100->0.1) | composition-only decline | % of movement that is composition | residual (training effect) |
+|---|---|---|---|---|
+| LR | 4.66pp | 3.82pp | 82.0% | +0.84pp |
+| MLP | 18.46pp | 4.99pp | 27.0% | +13.47pp |
+| VQC | 7.25pp | 8.50pp | **117.2%** | **-1.25pp** |
+
+**Prediction outcome:** the "genuinely low-capacity" branch is confirmed, more strongly
+than the prediction anticipated. VQC's composition share (117.2%) exceeds LR's (82.0%),
+and the residual does not merely shrink -- it goes negative. Paired per-replicate
+analysis (n=50, matched by seed/fold): mean paired residual = -0.0124 (SE=0.0107), i.e.
+not strongly distinguishable from zero but clearly not substantially positive. **There is
+no positive VQC-specific training-heterogeneity effect left once composition is
+accounted for.** The capacity confound this control set out to test is not weakened by
+this evidence -- if anything it is strengthened: the VQC's smaller-than-MLP observed
+decline (D-034) is now explained by evaluation composition to at least the same degree
+as LR's, not by a genuine intermediate training-heterogeneity sensitivity.
+
+**Composition-only decline differs across models despite identical test slices** (LR
+3.82pp, MLP 4.99pp, VQC 8.50pp) -- checked directly. Not explained by prediction
+confidence magnitude: MLP's fixed alpha=100 model is more confidently separated than
+LR's (mean |P-0.5|=0.29 vs 0.23, 9.2% vs 20.7% of predictions within 0.1 of the decision
+boundary, one representative seed/fold), yet still shows the larger swing. Not explained
+by class-recall asymmetry either (LR: 8.7pp recall gap between classes; MLP: 7.3pp,
+similar). VQC's much larger swing is most simply explained by it being the weakest
+baseline of the three fixed models (64.9% vs ~69% for LR/MLP) -- a weaker model's
+predictions are more sensitive to which class happens to dominate a given slice. The
+modest LR-vs-MLP gap itself does not trace to a single clean factor identified here.
+
+---
+
+## D-045 · 2026-08-20 — SUPERSEDES D-028 (in part): LR's worst-client decline was 82% evaluation composition
+
+**D-028 is not edited or deleted** -- this entry supersedes one specific claim within it,
+per the append-only rule.
+
+**What D-028 claimed (2026-08-18):** "worst-client accuracy declines monotonically as
+alpha falls, for both LR and MLP," presented under decision-table row 2 ("penalty
+exists; we were measuring in the wrong place") -- i.e. LR's 4.66pp worst-client decline
+was reported as evidence of a genuine heterogeneity penalty on individual clients, distinct
+from and correcting the flat global-accuracy finding.
+
+**What the decomposition showed (D-042, 2026-08-20):** LR's 4.66pp observed decline is
+82.0% evaluation-slice composition (a fixed alpha=100-trained model, scored against
+increasingly skewed held-out slices) and only 0.84pp (18.0%) a genuine training-time
+heterogeneity effect. LR's model barely changes with alpha at all -- consistent with,
+and now better explained by, its convexity (D-031) -- but the *worst-client accuracy
+number itself* mostly reflects which specific slice happens to be evaluated, not how
+much the model changed.
+
+**Net effect:** row 2 of D-028's decision table ("penalty exists, wrong measurement
+location") is **not wrong for MLP** (73% of its decline is real, D-042) but **was
+overstated for LR**, where the "wrong measurement location" framing implied a real,
+substantial hidden penalty that mostly is not there. The corrected reading: LR is
+close to what D-028's row 1 already described ("mechanism fires, model absorbs it")
+at the worst-client level too, not just the global level -- LR absorbs the
+heterogeneity almost entirely, with only a small residual client-level effect.
+
+---
+
+## D-046 · 2026-08-20 — SUPERSEDES D-034 (in part): VQC's decline is not intermediate training-heterogeneity sensitivity
+
+**D-034 is not edited or deleted** -- this entry supersedes one specific claim within it.
+
+**What D-034 claimed (2026-08-20):** "In magnitude, the [VQC's 7.25pp] decline sits
+**between** the convex reference LR (4.66pp) and the matched non-convex comparator MLP
+(18.46pp) -- more heterogeneity-sensitive than LR, less than MLP" -- framed as the VQC
+occupying a genuine intermediate position on a training-heterogeneity-sensitivity
+spectrum between the two classical references.
+
+**What the decomposition showed (D-044, 2026-08-20):** VQC's composition-only decline
+(8.50pp) *exceeds* its observed decline (7.25pp) -- composition accounts for 117.2% of
+the observed movement, and the residual training effect is slightly negative (-1.25pp,
+not strongly distinguishable from zero given a paired SE of 1.07pp, but clearly not
+substantially positive). The VQC shows **no positive training-heterogeneity effect**
+once composition is accounted for -- more decisively than LR (82% composition), not an
+intermediate case between LR and MLP on the training-effect axis at all.
+
+**Net effect:** D-034's "sits between LR and MLP" claim remains numerically true of the
+**observed** decline (7.25pp does fall between 4.66pp and 18.46pp), but the mechanistic
+interpretation -- an intermediate degree of genuine heterogeneity-sensitivity -- is not
+supported. The VQC's observed position between LR and MLP is better explained as: its
+baseline (alpha=100) accuracy is the lowest of the three (64.9% vs ~69%), which alone
+produces the largest composition-only swing of the three (D-044), and there is no
+additional real training effect layered on top, unlike MLP's (D-042). This also
+resolves D-037's original capacity-confound question, which the redesigned control
+(D-039 onward) set out to test: the evidence does not support model family (quantum vs.
+classical) as the explanation for the VQC's smaller observed decline than MLP's --
+composition/baseline-accuracy differences explain it at least as well.
+
+---
+
+## D-047 · 2026-08-20 — Methodology note: the Arm1/Arm2 pooling bug is the argument for the reproducibility rule
+
+**What:** D-040 found and fixed a real bug (worst-client numbers silently pooling arm1
+and arm2 rows sharing a model label, because the first version of the extraction module
+grouped by `model` without `arm`) while persisting the analysis as code. This entry
+records why that episode belongs in the paper's Methodology section, not just the
+decisions log.
+
+**The argument:** the bug was invisible for two full days (2026-08-18 to 2026-08-20)
+across multiple reports (`docs/diagnostic_report.md`, `docs/arm4_report.md`,
+`docs/arm5_report.md`) and several rounds of interactive analysis, because the
+ad-hoc computation that produced the published numbers happened to group correctly
+by coincidence of how each query was written, while a from-scratch reimplementation
+of "the same" methodology did not. **It was only caught because the numbers were
+regenerated from committed code and diffed against the published values** -- an
+audit that would not have happened under a weaker standard ("looks right," "matches
+what I remember," or citing the report rather than the CSV). This is the concrete
+case for CLAUDE.md's rule that no number goes in the paper unless it traces to a row
+in a committed results file *and* to code that can regenerate it: the rule is not
+process theater, it caught a real, silent, two-day-old error the first time it was
+actually exercised.
+
+---

@@ -48,6 +48,11 @@ alternatives; this table is a lookup, not a substitute.
 | D-040 | 2026-08-20 | Worst-client methodology persisted as code; real bug found (missing arm grouping key) and fixed |
 | D-041 | 2026-08-20 | E=5 confirmed to produce a genuine training effect (max param diff 0.91, unlike E=1's bit-identical) |
 | D-042 | 2026-08-20 | Composition-vs-training decomposition: 82% composition for LR, 27% for MLP, VQC pending |
+| D-043 | 2026-08-20 | Pre-registered prediction: VQC composition share should resemble LR's if capacity explains the effect |
+| D-044 | 2026-08-20 | VQC decomposition result: composition = 117% of decline, residual negative -- capacity confound not weakened |
+| D-045 | 2026-08-20 | SUPERSEDES D-028 (in part): LR's worst-client decline was 82% evaluation composition |
+| D-046 | 2026-08-20 | SUPERSEDES D-034 (in part): VQC's decline is not intermediate training-heterogeneity sensitivity |
+| D-047 | 2026-08-20 | Methodology note: the Arm1/Arm2 pooling bug is the argument for the reproducibility rule |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the
