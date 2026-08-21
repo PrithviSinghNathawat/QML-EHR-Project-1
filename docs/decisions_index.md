@@ -64,3 +64,13 @@ See the "D-numbering reconciliation" note in `docs/decisions.md` (between
 D-020 and D-021) for the full history. If this content exists elsewhere
 (a separate document, a conversation not captured here), it should be
 backfilled into `decisions.md` under these IDs rather than left as a gap.
+
+**Numbering convention, 2026-08-20 onward:** all `D-*` numbers are now frozen
+(historical, never renumbered or continued). New entries use per-person
+prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
+`docs/decisions.md` for why.
+
+| ID | Date | Title |
+|---|---|---|
+| P-001 | 2026-08-20 | Per-person decision-ID prefixes adopted, to prevent numbering collisions |
+| P-002 | 2026-08-20 | Capacity scatter (Step 4) skipped: its own contingency fired |

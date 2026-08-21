@@ -1184,3 +1184,65 @@ process theater, it caught a real, silent, two-day-old error the first time it w
 actually exercised.
 
 ---
+
+## P-001 · 2026-08-20 — Per-person decision-ID prefixes adopted, to prevent numbering collisions
+
+**What:** Following the D-029-047/D-029-033 numbering collision between this branch and
+Ayuvi's (resolved by renumbering this branch's entries to D-034-052 -- see the commit
+"docs: renumber D-029-047 -> D-034-052..."), decision IDs going forward use per-person
+prefixes instead of a single shared sequential counter:
+
+- **Prithvi's new entries: `P-001` onward** (this entry is `P-001`).
+- **Ayuvi's new entries: `A-001` onward.**
+- **All existing `D-*` numbers (D-001 through D-052 on this branch; D-001-028 and
+  D-029-033 on main) are frozen as historical.** Not renumbered, not reused, not
+  continued. Any new entry, by either person, gets a `P-` or `A-` number, never a new
+  `D-` number.
+
+**Why:** the collision happened because both branches independently continued the same
+shared `D-NNN` counter from a common fork point, with no coordination mechanism for
+allocating the next number across parallel branches. Per-person prefixes make that
+structurally impossible -- each person's counter is theirs alone, so two people working
+in parallel can never collide on an ID again, regardless of how long branches diverge
+before merging.
+
+**Consequence:** cross-references to old entries keep their `D-` prefix and are never
+renumbered again (the opposite of what just happened to D-029-047 -- that renumbering
+was a one-time cleanup of a collision that existed before this rule, not a precedent for
+renumbering being routine). Anyone citing a decision in paper prose should always use the
+full ID (`D-018`, `P-003`, `A-002`, etc.) so it stays unambiguous regardless of which
+branch or session it originated in.
+
+**Recorded in `CLAUDE.md`** so both Claude instances (this one and whichever instance
+Ayuvi's sessions use) follow the convention without being told each time.
+
+---
+
+## P-002 · 2026-08-20 — Capacity scatter (Step 4) skipped: its own contingency fired
+
+**What:** The parameter-count capacity scatter (5 MLP widths x 4 alpha x 30 seeds =
+3000 runs, redesigned per D-044 onward) was never run. Decided by Prithvi.
+
+**Why:** the scatter's launch was explicitly contingent from the start: "if most of
+the VQC's decline turns out to be composition, tell me before running -- the scatter
+was designed around a 7.3pp effect and may be measuring something much smaller." The
+VQC composition decomposition (D-049) showed composition accounts for 117.2% of the
+observed 7.25pp decline, with a residual of -1.25pp (not distinguishable from zero,
+clearly not substantially positive). There is no positive training-heterogeneity
+effect left to bracket. The 7.3pp effect the scatter was designed to explain does not
+exist as a real quantity once composition is subtracted out -- the study, as scoped,
+no longer has a question to answer.
+
+**Not a failure of the contingency plan -- the plan worked exactly as designed.** The
+whole point of pre-declaring "tell me before running" was to avoid spending a 3000-run
+compute budget on a scatter built around an effect that might not survive the
+decomposition. It didn't survive. Stopping here is the contingency firing correctly,
+not an incomplete task.
+
+**Consequence:** no MLP-width sweep exists in this repo. If a future question arises
+that genuinely needs a parameter-count scatter (e.g. testing capacity effects on a
+*different* quantity that does show a real residual), it should be redesigned around
+whatever that quantity's real, decomposed effect size actually is -- not resurrected
+from this scoping, which was sized for an effect now known not to exist.
+
+---

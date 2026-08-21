@@ -678,3 +678,55 @@ the decomposition, all decision updates) into `main` now, per instruction -- thi
 was not contingent on the scatter.
 
 ---
+
+## 2026-08-20 — Renumbering executed, per-person prefixes adopted
+
+Prithvi confirmed the proposed fix and gave a directive worth remembering: never
+renumber what's already merged, only what's still local to a branch. Executed the
+D-029-047 -> D-034-052 shift in descending order (047 first) via a small script rather
+than manual edits, across 8 files. Verified with a sequential header check afterward
+(no gaps, no duplicates) rather than trusting the script's own "success" output --
+caught one thing the regex missed: a compact range notation ("D-030-033") where only
+the first number matched the `D-0XX` pattern, leaving "D-035-033" as broken text.
+Fixed by hand, would not have been caught without the manual verification pass.
+
+**Adopted per-person prefixes going forward** (P- for Prithvi, A- for Ayuvi), all
+existing D-numbers frozen as historical -- structurally prevents this exact collision
+from recurring, since each person's counter is now independent. Recorded as P-001
+(the first entry under the new scheme) and added to `claude.md` so both instances
+follow it without being told each session.
+
+---
+
+## 2026-08-20 — Capacity scatter skipped (contingency fired), reports revised, stopping compute
+
+**Capacity scatter (Step 4): not run.** Its own pre-declared contingency fired --
+composition explains 117% of the VQC's observed decline, so there's no substantial
+positive effect left to bracket with an MLP-width sweep. Logged as P-002: this is the
+contingency plan working correctly, not an incomplete task.
+
+**Revised `docs/arm4_report.md` and `docs/arm5_report.md`:** headline numbers are now
+the decomposed residuals (VQC: -1.25pp, not distinguishable from zero) rather than
+the observed declines (VQC: 7.25pp) that the original versions led with. Observed and
+composition-only numbers kept alongside for reference, not deleted. Stated plainly
+that the VQC shows no measurable training-heterogeneity effect once composition is
+accounted for.
+
+**Flagged, not resolved: the convexity tension.** The VQC is non-convex, yet its
+residual behaves like the convex LR's (small, near-zero), not the non-convex MLP's
+(large, real, +13.47pp) -- on the face of it, this doesn't fit a purely
+convexity-based account of what separates LR from MLP. Listed a few plausible,
+unverified directions (parameter count, ansatz structure, per-client data volume at
+this problem size) explicitly as unverified, not as the answer. Did not speculate
+past what's actually been checked.
+
+**Arm 5's revision is honest about what wasn't re-measured:** the composition
+decomposition was only run for Arm 4 (FedAvg); Arm 5's (circular-mean) version of the
+same finding is inferred by extension from Arm 4, justified by D-041's original
+"statistically indistinguishable" result, but flagged explicitly as not independently
+verified rather than asserted as measured.
+
+Compute stops here per instruction. Next is merging to main and pushing, then
+writing.
+
+---
