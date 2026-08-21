@@ -79,3 +79,6 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 |---|---|---|
 | P-001 | 2026-08-20 | Per-person decision-ID prefixes adopted, to prevent numbering collisions |
 | P-002 | 2026-08-20 | Capacity scatter (Step 4) skipped: its own contingency fired |
+| P-003 | 2026-08-22 | Arm 3 (FedProx) scoped to MLP only |
+| P-004 | 2026-08-22 | FedProx anchor: verified set_params-immediately-before-fit, no interface change needed |
+| P-005 | 2026-08-22 | Arm 3 results: FedProx recovers 5-17% of MLP's residual damage, non-monotonically in mu |

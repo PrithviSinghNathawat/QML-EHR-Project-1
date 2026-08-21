@@ -414,14 +414,45 @@ each containing `client_params` (rounds x n_clients x 18) and
 
 ---
 
+## Arm 3 (FedProx, MLP only)
+
+**Command:**
+```
+.venv/Scripts/python.exe scripts/run_arm3_sweep.py
+.venv/Scripts/python.exe scripts/arm3_composition_decomposition.py
+```
+
+**Expected output:** `run_arm3_sweep.py` prints one `mu=X done (Ys elapsed)`
+line per mu value, ending with a `total:`/`wrote:` summary. ~75s total,
+classical (MLP), no parallelism needed.
+`arm3_composition_decomposition.py` prints a per-condition
+mean/std/n block for each of the 3 mu values, ~15s.
+
+**Expected files:**
+- `results/arm3_diagnostic_results.csv`, `results/arm3_diagnostic_divergence.csv`
+  (long format, same schema as the other arms' diagnostic CSVs — `model`
+  column distinguishes mu values, e.g. `MLP-FedProx-mu0.05`)
+- `results/runs_arm3.csv` (simple per-replicate summary, same schema as
+  `results/runs.csv`)
+
+**Reproduce the headline numbers:**
+```
+.venv/Scripts/python.exe scripts/worst_client.py results/arm3_diagnostic_results.csv
+```
+Reproduces the observed worst-client table in `docs/arm3_report.md` exactly.
+
+**Failure signature:** none observed — this arm scoped to MLP only (classical,
+fast), no compute-scale surprises like the VQC arms had.
+
+---
+
 ## Not yet built
 
-Arm 3 (FedProx) doesn't exist yet — being built by a teammate on a
-separate branch; do not edit `federated_loop.py`, `data_loader.py`,
-`partitioner.py`, `docs/INTERFACE.md`, or any `*_vqc.py` file, per that
-work split.
+Nothing — Arms 1-5 all exist. Arm 3 was the last one built (2026-08-22,
+MLP only, scoped per the composition decomposition — see `docs/arm3_report.md`
+and P-003).
 
-Also outstanding: `scripts/timing_spike.py` still uses 5 synthetic clients,
-not yet updated to match the 4-client decision (D-017) — flagged in
-`docs/decisions.md`, not yet fixed. Low priority now that the real Arm 2
-grid (which does use 4 clients) has real timing data of its own.
+Outstanding, low priority: `scripts/timing_spike.py` still uses 5 synthetic
+clients, not yet updated to match the 4-client decision (D-017) — flagged in
+`docs/decisions.md`, not fixed. Doesn't block anything; the real Arm 2 grid
+(which does use 4 clients) has real timing data of its own.

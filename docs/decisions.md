@@ -1441,3 +1441,79 @@ whatever that quantity's real, decomposed effect size actually is -- not resurre
 from this scoping, which was sized for an effect now known not to exist.
 
 ---
+
+## P-003 · 2026-08-22 — Arm 3 (FedProx) scoped to MLP only
+
+**What:** Arm 3, the last unbuilt arm, is scoped to the MLP alone -- not LR, not the
+VQC. Decided by Prithvi.
+
+**Why:** FedProx's proximal term exists to restrain client drift and recover training
+damage caused by it. The composition-vs-training decomposition (D-050, D-051/D-049)
+showed LR's residual training effect is small (+0.84pp, 82% of its observed decline
+is evaluation composition) and the VQC's residual is negative/indistinguishable from
+zero (-1.25pp, composition exceeds 100% of its observed decline). Neither has
+meaningful genuine drift damage for a proximal term to act on. Only MLP (+13.47pp
+residual, D-047) has real damage. Building FedProx for LR or VQC would measure a
+null effect layered on an already-established null effect -- not worth the compute
+for the last arm.
+
+---
+
+## P-004 · 2026-08-22 — FedProx anchor: verified set_params-immediately-before-fit, no interface change needed
+
+**What:** Before writing `FedProxMLPModel`, verified the precondition Prithvi
+specified: does `federated_loop.py` call `set_params` with the global vector
+immediately before every `fit()` call? Confirmed at `scripts/federated_loop.py`
+lines 52-53 -- `local_model.set_params(global_params.copy())` directly followed by
+`local_model.fit(X_c, y_c, epochs=local_epochs)`, no code between, every round,
+every client.
+
+**Consequence:** `fit()` can snapshot its own current parameters as its first action
+and that snapshot is exactly the round's true global vector -- no staleness, no
+interface change. The proximal term (`mu * (theta - anchor)` added to each
+parameter's gradient, anchor = the snapshot) lives entirely inside
+`FedProxMLPModel.fit()` in `scripts/models_mlp.py`. `federated_loop.py` and
+`scripts/aggregators.py` were not touched.
+
+**Verified, not just reasoned about:** ran `FedProxMLPModel` with `mu=0.0` through
+the unmodified `run_federated` and confirmed it reproduces plain `MLPModel`'s trained
+parameters bit-for-bit (`np.allclose` true to full precision) -- the proximal term
+correctly vanishes at mu=0, and the implementation is provably compatible with the
+frozen loop, not just argued to be.
+
+---
+
+## P-005 · 2026-08-22 — Arm 3 results: FedProx recovers 5-17% of MLP's residual damage, non-monotonically in mu
+
+**What:** Full 750-replicate sweep (mu in {0.01, 0.05, 0.1}, same protocol as every
+other arm) plus the composition decomposition, same method as D-044 onward. Full
+writeup: `docs/arm3_report.md`.
+
+**Result:** FedProx reduces MLP's residual training-heterogeneity effect from
++13.47pp (FedAvg, D-047) to +12.72pp (mu=0.01), +11.14pp (mu=0.05), +12.80pp
+(mu=0.1) -- a 5.0-17.3% relative reduction, never close to eliminating the damage.
+**Not monotonic in mu:** mu=0.05 (the literature-recommended value for this dataset)
+shows the largest reduction; mu=0.01 and mu=0.1 show smaller, similar reductions to
+each other. Reported as found, not smoothed into a monotonic story.
+
+**Paired significance check** (same seed/fold, FedProx minus FedAvg worst-client
+accuracy at alpha=0.1): mu=0.01 +0.87pp (SE 1.53pp, ~0.6 SE from zero), mu=0.05
++2.93pp (SE 1.91pp, ~1.5 SE), mu=0.1 +2.05pp (SE 1.77pp, ~1.2 SE). None reach
+conventional significance. mu=0.05 comes closest, consistent with but not strong
+confirmation of the literature-recommended value being well-chosen.
+
+**FedProx does its mechanistic job -- divergence drops monotonically and cleanly**
+(1.1088 at mu=0 -> 0.9578 at mu=0.1, final round, alpha=0.1) **but this does not
+translate into a correspondingly large or monotonic recovery of worst-client
+accuracy.** mu=0.1 restrains divergence far more than mu=0.01 (13.6% vs 2.9% lower
+than FedAvg) but shows a near-identical residual (+12.80pp vs +12.72pp). Whatever
+connects client-parameter divergence to worst-client accuracy damage is not a simple
+monotonic relationship in this data -- stated as an open observation, not explained
+further here.
+
+**mu was not tuned toward a preferred outcome.** All three values (0.01, published
+work's 0.05, and 0.1 as an upper comparison point) are reported as run, including the
+non-monotonic pattern that a cleaner-looking report might have been tempted to
+smooth over.
+
+---

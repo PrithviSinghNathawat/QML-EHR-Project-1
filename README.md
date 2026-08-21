@@ -12,7 +12,7 @@ advantage for either approach. Built for a university capstone
 
 ## Status
 
-*Last updated 2026-08-20 — keep this section honest and current; see
+*Last updated 2026-08-22 — keep this section honest and current; see
 `docs/labbook.md` for the session that produced this state.*
 
 **Implemented and validated:**
@@ -49,6 +49,11 @@ advantage for either approach. Built for a university capstone
 - Worst-client movement decomposed into evaluation-composition and
   training-effect components (D-044 onward) — see the revised headline
   below
+- **Arm 3 (FedProx, MLP only): full sweep complete — the last arm.**
+  Scoped to MLP since LR/VQC have no genuine training-effect residual for
+  a proximal term to act on (P-003). Recovers 5-17% of MLP's residual
+  training damage across μ ∈ {0.01, 0.05, 0.1}, non-monotonically, none
+  of it statistically robust — see `docs/arm3_report.md`.
 
 **Primary metric (D-034/D-035): worst-client accuracy, reported first.**
 Global accuracy is secondary. Rationale: global accuracy is flat across
@@ -95,9 +100,8 @@ several MLP widths) was skipped (P-002):** its own pre-declared
 contingency fired — with composition explaining 117% of the VQC's
 decline, there is no substantial residual effect left to bracket.
 
-**Not started:** Arm 3 (FedProx) — in progress on a teammate's branch in
-parallel; this branch does not touch `federated_loop.py`, `data_loader.py`,
-`partitioner.py`, `docs/INTERFACE.md`, or any quantum file, by agreement.
+**Not started:** nothing — Arms 1 through 5 all exist and have full sweeps.
+This project's compute is done; remaining work is writing.
 
 **Known open items:** decision IDs D-009–D-014 are referenced in project
 history but not recorded in `docs/decisions.md` — see

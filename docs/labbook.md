@@ -973,3 +973,51 @@ Compute stops here per instruction. Next is merging to main and pushing, then
 writing.
 
 ---
+
+## 2026-08-22 — Arm 3 (FedProx, MLP only): the last arm, the last compute
+
+Scoped to MLP only per Prithvi's instruction, justified by the decomposition: LR and
+VQC have essentially no genuine training-effect residual (D-050, D-051/D-049) for a
+proximal term to act on, only MLP does (+13.47pp, D-047). Logged as P-003.
+
+**Verified the precondition before writing any code, as instructed:** does
+`federated_loop.py` call `set_params` with the global vector immediately before every
+`fit()`? Checked the actual file (`scripts/federated_loop.py:52-53`) -- yes, no code
+between the two calls, every round, every client. This meant `fit()` could safely
+snapshot its own current parameters as the proximal anchor with no staleness and no
+interface change -- didn't need to stop and ask, per the instruction's own branching
+logic. Logged as P-004, including the mu=0 bit-for-bit equivalence check that proved
+this empirically rather than just by code inspection.
+
+**Built `FedProxMLPModel`** (`scripts/models_mlp.py`, subclass of `MLPModel`) -- the
+proximal term lives entirely in `fit()`, `federated_loop.py` and `aggregators.py`
+untouched. Smoke-tested through the real (unmodified) loop before the full sweep.
+
+**Full 750-replicate sweep** (mu in {0.01, 0.05, 0.1}, same protocol as every other
+arm: 20 rounds, E=5, 5-fold CV, 10 seeds) plus the composition decomposition
+(Prithvi's persisted method, `scripts/worst_client.py` + a new
+`arm3_composition_decomposition.py` mirroring the pattern from Arm 4). Classical, fast
+-- 75s for the main sweep, 14s for the decomposition, no parallelism needed.
+
+**Result: FedProx recovers 5-17% of the residual damage, not most of it, and not
+monotonically in mu.** +13.47pp (FedAvg) -> +12.72pp (mu=0.01) -> +11.14pp (mu=0.05)
+-> +12.80pp (mu=0.1). mu=0.05 (the literature value) shows the best result but the
+pattern isn't monotonic and none of the paired improvements reach conventional
+significance (closest: mu=0.05 at ~1.5 SE from zero). Reported exactly as found --
+did not smooth mu=0.01/mu=0.1's near-identical residuals into a cleaner trend, and
+did not tune mu after seeing results.
+
+**One more thing worth keeping:** checked whether FedProx's mechanism (reducing
+client divergence) actually explains the accuracy result. It doesn't cleanly --
+divergence drops monotonically and substantially with mu (13.6% lower at mu=0.1 vs
+FedAvg), but the worst-client residual at mu=0.1 is barely different from mu=0.01's
+despite that large divergence gap. Flagged as an open observation, not explained
+further -- the connection between "how much clients drift" and "how much the worst
+client suffers" isn't the simple monotonic relationship FedProx's design would
+suggest, at least not in this data.
+
+Full writeup: `docs/arm3_report.md`. Logged as P-005. This is the last arm and the
+last compute for this project, per instruction. Pushing under the currently
+authenticated account (Ayuvi) as directed.
+
+---
