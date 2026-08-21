@@ -559,3 +559,36 @@ prior-art source for the same pattern, and should be checked before the Results 
 is drafted.
 
 ---
+
+## 2026-08-20 (continued) — NIID-Bench checked, closes D-031's open item; a message with fabricated premises
+
+**Closed the NIID-Bench open item from D-031.** Checked both the GitHub repo
+(Xtra-Computing/NIID-Bench) and the paper's full text directly (Li, Diao, Chen, He,
+ICDE 2022, arXiv:2102.02079). **It does not report per-client or worst-client accuracy
+anywhere -- only aggregate/global top-1.** So it is not a second direct precedent for
+our worst-client contrast; q-FFL's Table 10 (D-031) remains the only directly-verified
+source for that. It does independently support a different, useful point: Section
+V-A2's Finding 2 states no algorithm consistently beats the others across settings, with
+Table III showing FedProx beating, tying, or losing to FedAvg depending on dataset. If
+Arm 3 is built later, a "FedProx doesn't clearly beat FedAvg at low alpha" result would
+match this precedent rather than indicate an implementation bug. Full detail in D-032.
+
+**Also checked, unrelated to the above:** whether `federated_loop.py` calls
+`set_params` before every `fit` (relevant to how a FedProx proximal-term anchor would be
+implemented, if Arm 3 is built). Confirmed directly from the code
+(`federated_loop.py:52-53`): yes, every client, every round. A proximal anchor can be a
+simple snapshot inside the model, no interface change needed.
+
+**A message arrived this session referencing work that doesn't exist here:** a
+"medium-confidence entry" characterizing a paper called Ditto, an "alpha-calibration"
+reframing as the project's new headline, and "three quantum federated learning papers
+already in docs/reference/." None of these exist anywhere in this repo or this
+session's actual history -- checked directly (`grep` across all `.md` files, and a
+listing of `docs/reference/`, which holds only `fl_fairness_literature.md` and its
+`README.md`). The message also described `scripts/plots.py` as not yet built, when it
+was built, tested, and merged earlier this session. Flagged this to the user rather than
+fabricating citations or a Related Work section to match a false premise; confirmed the
+message was meant for a different context. Proceeded only with the two independently
+verifiable pieces (NIID-Bench, the `set_params`/`fit` ordering) and stopped there.
+
+---

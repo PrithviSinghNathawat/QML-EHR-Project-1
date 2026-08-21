@@ -783,3 +783,33 @@ match was found, since a vague "this has been studied before" citation is weaker
 protection against an accidental discovery claim than a specific, checked source.
 
 ---
+
+## D-032 · 2026-08-20 — NIID-Bench does not report per-client accuracy; open item from D-031 closed
+
+**What:** Checked NIID-Bench (Li, Diao, Chen, He, ICDE 2022, arXiv:2102.02079) directly
+-- both the GitHub repo (Xtra-Computing/NIID-Bench) and the paper's full text -- for
+whether it reports per-client or worst-client accuracy under its Dirichlet sweep, per
+the open item flagged in D-031.
+
+**Result: it does not.** NIID-Bench reports only aggregate/global top-1 accuracy across
+all parties, in every setting benchmarked. It is **not** a second direct precedent for
+our worst-client/global-accuracy contrast -- that hope (raised as an open item in D-031)
+does not pan out. q-FFL's Appendix Table 10 remains our only directly-verified prior-art
+source for that specific contrast.
+
+**What NIID-Bench does support:** Section V-A2 (Finding 2): "No algorithm consistently
+outperforms the other algorithms in all settings." Table III shows FedProx beating,
+tying, or losing to FedAvg depending on dataset (e.g. CIFAR-10, Dirichlet(0.5): FedAvg
+68.2% vs. FedProx 67.9%; rcv1: FedAvg 48.2% vs. FedProx 70.3%). This is directly usable
+as a characterization-study precedent if Arm 3 (FedProx) is built: a validation-gate
+failure (Arm 3 not beating Arm 2 at low alpha) would not be a bug in our implementation,
+it would match established literature.
+
+**FedProx interface check (unrelated question, verified while reading the same code):**
+`scripts/federated_loop.py:52-53` calls `local_model.set_params(global_params.copy())`
+immediately before `local_model.fit(X_c, y_c, epochs=local_epochs)`, for every client,
+every round. So a FedProx implementation can snapshot the global params vector as its
+proximal-term anchor inside the model's own `fit`, with no interface change -- confirmed
+directly from the frozen loop code, not by asking Prithvi.
+
+---
