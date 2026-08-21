@@ -1574,3 +1574,55 @@ per-person-prefix rule was already present when I onboarded), not continued the 
 resolve it. Flagged here rather than left implicit.
 
 ---
+
+## A-002 · 2026-08-22 — plots.py completed against the full Arm 1-5 results; composition-decomposition figure added
+
+**What:** Extended `scripts/plots.py` (built in D-030) to the now-complete result set and
+added the primary decomposition figure per instruction. Two pieces:
+
+1. **Arms 3, 4, 5 wired in.** Added `results/arm3_diagnostic_results.csv`,
+   `arm4_diagnostic_results.csv`, `arm5_diagnostic_results.csv` (and their divergence
+   counterparts) to `RESULTS_SOURCES`/`DIVERGENCE_SOURCES`. Verified their schemas match
+   the original long-format columns exactly (`seed, fold, model, arm, condition, client,
+   n, accuracy, f1, auroc` / `..., round, mean_pairwise_l2`) before adding -- no other code
+   change was needed, confirming the extensibility design from D-030 actually holds up
+   against real new arms, not just the hypothetical missing-file test done at the time.
+
+2. **New script `scripts/composition_summary.py`** (does not edit any of Prithvi's
+   existing decomposition scripts) consolidates the composition-vs-training decomposition
+   (D-044-D-052) into `results/composition_decomposition_summary.csv`, so the numbers in
+   `docs/arm4_report.md`'s headline table have a reproducible data source instead of only
+   existing in that markdown table and one-off interactive runs. Reuses
+   `composition_decomposition.composition_only_curve()` (imported, not reimplemented) to
+   re-derive LR/MLP's composition-only curve (real federated training at alpha=100 only,
+   ~9 seconds total, cheap) and aggregates the already-computed VQC per-replicate JSONs in
+   `results/vqc_composition_partial/` (no training, just reading 50 existing files).
+   **Verified the re-derived numbers against the already-reported ones before trusting
+   them:** LR 4.666pp/3.825pp, MLP 18.462pp/4.998pp, VQC 7.251pp/8.493pp (observed/
+   composition-only decline, alpha=100->0.1) -- match D-047/D-049's 4.66/3.82, 18.46/4.99,
+   7.25/8.50 respectively (LR/MLP have tiny floating-point-scale differences from
+   independent re-training; VQC matches to within rounding since it reads the same static
+   files).
+
+**New figure: `results/figs/composition_decomposition.png`.** Grouped bar chart, one
+group per model (LR, MLP, VQC), three bars per group (observed decline, composition-only
+decline, residual/training effect), in percentage points. Chosen over a line/scatter
+design because the comparison is inherently three discrete numbers per model, and the
+report's own headline table (`docs/arm4_report.md`) already uses exactly this
+structure -- the figure should mirror the table it's illustrating, not invent a different
+shape for the same comparison. VQC's residual bar visibly crosses zero (negative),
+matching the "no measurable training-heterogeneity effect" finding directly.
+
+**Title correction:** the worst-client figure's title previously read "(primary result)"
+-- stale as of this task, since the decomposition figure is now the primary result per
+instruction. Retitled to "(observed, pre-decomposition)" to make the relationship
+explicit rather than leaving two figures both implicitly claiming to be primary.
+
+**Not changed:** the worst-client/global-accuracy figure pair's design itself (matched
+axes, natural-partition reference lines in the legend, shared color mapping) -- kept as
+originally planned, per instruction, despite now carrying 9 series each (arm1 LR/MLP,
+arm2 LR/MLP, arm3's three FedProx mu variants, arm4 VQC, arm5 VQC-circmean). Legibility
+at this series count is workable but dense; flagged here rather than unilaterally
+redesigning a figure the instruction explicitly said to keep as-is.
+
+---

@@ -1063,3 +1063,40 @@ relative to a gap in the literature, it may be revealing something about how an
 already-influential, highly-cited result should be read.
 
 ---
+
+## 2026-08-22 (continued) — plots.py completed against Arms 1-5, decomposition figure built (A-002)
+
+**Extended plots.py's data sources** to Arm 3/4/5's diagnostic CSVs -- confirmed their
+schemas matched the original design exactly before wiring them in, no code changes
+needed beyond the source-path list. This is the first real test of the "add a new arm by
+adding one line" design from D-030, and it held up.
+
+**The composition-only decomposition numbers (LR 3.82pp, MLP 4.99pp, VQC 8.50pp) only
+existed as a markdown table and one-off interactive runs** -- no CSV backed them. Wrote
+`scripts/composition_summary.py` (new file, doesn't touch any of Prithvi's existing
+decomposition scripts) to regenerate them reproducibly: re-runs
+`composition_decomposition.composition_only_curve()` for LR/MLP (real federated training,
+alpha=100 only, ~9 seconds total -- cheap) and aggregates VQC's 50 already-computed
+per-replicate JSON files (no training). Checked the re-derived numbers against the
+already-reported ones before trusting the new CSV: matched to within floating-point/
+retraining noise on every model. Saved to
+`results/composition_decomposition_summary.csv`.
+
+**Built the primary figure**, `composition_decomposition.png`: a grouped bar chart,
+observed/composition-only/residual per model, mirroring the exact structure of
+`docs/arm4_report.md`'s headline table rather than inventing a new visual shape for the
+same three numbers. VQC's residual bar visibly crosses zero, which is the whole point --
+seeing it cross zero on a bar chart lands the "no measurable training effect" finding
+more directly than reading -1.25pp off a table.
+
+**Caught and fixed one stale detail by re-inspecting the actual output image, not just
+checking the script ran:** the worst-client figure's title still said "(primary result)"
+from before the decomposition existed. Two figures both implicitly claiming to be
+primary would be confusing -- retitled to "(observed, pre-decomposition)".
+
+**Not touched:** the worst-client/global-accuracy figure pair's underlying design, per
+instruction to keep it as originally planned. It now carries 9 series each (up from 4) --
+still legible, but dense. Flagged rather than redesigned, since redesigning wasn't asked
+for and the instruction was explicit about keeping this pair as-is.
+
+---
