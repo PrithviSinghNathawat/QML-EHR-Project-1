@@ -669,7 +669,7 @@ the task instruction.
 
 ---
 
-## D-029 · 2026-08-19 — Worst-client accuracy is the primary metric; global is secondary
+## D-034 · 2026-08-19 — Worst-client accuracy is the primary metric; global is secondary
 
 **What:** Following the diagnostic session (D-028, `docs/diagnostic_report.md`),
 worst-client accuracy is reported first everywhere going forward, with global
@@ -690,7 +690,7 @@ records only what was stated inline in the actual message received.
 
 ---
 
-## D-030 · 2026-08-19 — Primary metric changed to worst-client performance
+## D-035 · 2026-08-19 — Primary metric changed to worst-client performance
 
 Logged verbatim, per instruction:
 
@@ -708,13 +708,13 @@ measuring only global accuracy conceals this entirely. Attribution caution:
 degradation of client-level performance under non-IID conditions is established in
 the federated fairness literature. We confirm it; we do not claim it.
 
-*(This formalizes, with full evidence and attribution caution, what D-029 recorded
-as a summary decision on 2026-08-18 -- not a duplicate, D-029's brief form and this
+*(This formalizes, with full evidence and attribution caution, what D-034 recorded
+as a summary decision on 2026-08-18 -- not a duplicate, D-034's brief form and this
 entry's verbatim form are both kept per the append-only rule.)*
 
 ---
 
-## D-031 · 2026-08-19 — Convexity mediates whether the penalty surfaces globally
+## D-036 · 2026-08-19 — Convexity mediates whether the penalty surfaces globally
 
 Logged verbatim, per instruction:
 
@@ -730,7 +730,7 @@ reference. Reporting both prevents this from being model selection.
 
 ---
 
-## D-032 · 2026-08-19 — Natural institutional heterogeneity is milder than commonly-used synthetic settings
+## D-037 · 2026-08-19 — Natural institutional heterogeneity is milder than commonly-used synthetic settings
 
 Logged verbatim, per instruction:
 
@@ -748,7 +748,7 @@ claim.
 
 ---
 
-## D-033 · 2026-08-19 — Protocol: 5-fold stratified CV x 10 seeds
+## D-038 · 2026-08-19 — Protocol: 5-fold stratified CV x 10 seeds
 
 Logged verbatim, per instruction:
 
@@ -761,7 +761,7 @@ protocol decision.)*
 
 ---
 
-## D-034 · 2026-08-20 — Arm 4 (VQC + FedAvg) results: trained properly, penalty magnitude between LR and MLP
+## D-039 · 2026-08-20 — Arm 4 (VQC + FedAvg) results: trained properly, penalty magnitude between LR and MLP
 
 **What:** Full 250-replicate sweep completed (5-fold CV x 10 seeds x 5 conditions),
 identical protocol to the classical diagnostic. Full writeup: `docs/arm4_report.md`.
@@ -792,7 +792,7 @@ so no fresh timing estimate was required before launching it -- see Arm 5 entry 
 
 ---
 
-## D-035 · 2026-08-20 — Arm 5 (VQC + circular-mean aggregation) built and launched
+## D-040 · 2026-08-20 — Arm 5 (VQC + circular-mean aggregation) built and launched
 
 **What:** `scripts/aggregators.py:circular_mean` added -- `atan2(sum(w*sin(theta)),
 sum(w*cos(theta)))` per parameter, weighted by client size. Only meaningful for
@@ -819,7 +819,7 @@ after merging, same pattern as Arm 4) -- reported once the sweep completes.
 
 ---
 
-## D-036 · 2026-08-20 — Arm 5 results: circular-mean aggregation makes no measurable difference
+## D-041 · 2026-08-20 — Arm 5 results: circular-mean aggregation makes no measurable difference
 
 **What:** Full 250-replicate sweep completed (7.48hr wall-clock, 29.12 CPU-hr).
 Full writeup: `docs/arm5_report.md`.
@@ -844,11 +844,11 @@ not what determines VQC heterogeneity sensitivity at this scale.
 
 ---
 
-## D-037 · 2026-08-20 — Capacity control for Arm 4: weakened MLP, calibration mismatch, and a training degeneracy
+## D-042 · 2026-08-20 — Capacity control for Arm 4: weakened MLP, calibration mismatch, and a training degeneracy
 
 **What:** Built a deliberately weakened classical MLP (hidden=1, 9 params; federated
 rounds reduced 20->4; local epochs reduced 5->1) to test whether the VQC's smaller
-worst-client decline vs the matched MLP (D-034) is a capacity artifact rather than a
+worst-client decline vs the matched MLP (D-039) is a capacity artifact rather than a
 model-family effect. Calibrated once, against alpha=100/seed=0 only, to match the
 VQC's alpha=100 worst-client baseline (0.6488) before running the full sweep. Full
 writeup: `docs/arm4_capacity_control_report.md`.
@@ -885,9 +885,9 @@ parameters across conditions before trusting a reduced-budget degradation number
 
 ---
 
-## D-038 · 2026-08-20 — D-036 circular-mean explanation verified directly: confirmed
+## D-043 · 2026-08-20 — D-041 circular-mean explanation verified directly: confirmed
 
-**What:** D-036 attributed the Arm 5 (circular-mean) vs Arm 4 (FedAvg) null result to
+**What:** D-041 attributed the Arm 5 (circular-mean) vs Arm 4 (FedAvg) null result to
 trained rotation angles never reaching the wraparound boundary, but this was
 unverified -- the original sweeps saved metrics and a scalar divergence, not raw
 parameter vectors. Re-ran a 20-replicate representative sample (5 conditions x 2
@@ -902,13 +902,13 @@ specifically whether the most heterogeneous condition (alpha=0.1) pushes angles
 closer to the boundary -- it doesn't; alpha=100 has the largest magnitudes in this
 sample, no trend toward the boundary as heterogeneity increases.
 
-**No alternative explanation needed.** The original account in D-036 was correct, not
+**No alternative explanation needed.** The original account in D-041 was correct, not
 just plausible -- driven by the small learning rate (0.1), narrow initialization
 (0.1*N(0,1)), and modest round count (20), independent of alpha.
 
 ---
 
-## D-039 · 2026-08-20 — Protocol parameters recovered from source (round count, worst-client evaluation)
+## D-044 · 2026-08-20 — Protocol parameters recovered from source (round count, worst-client evaluation)
 
 **What:** Two protocol parameters, undocumented as explicit decisions until now, recovered
 directly from the actual sweep code that produced Arms 1, 2, 4, 5 (not from the invalidated
@@ -936,7 +936,7 @@ Written for the classical diagnostic sweep; the identical pattern was replicated
 interactive analysis for the Arm 4/5 numbers in `docs/arm4_report.md`, but was never itself
 saved as a script until this recovery -- a real documentation gap, now closed by this entry.
 
-**Design change, this session:** the previous capacity control (D-037) plotted degradation
+**Design change, this session:** the previous capacity control (D-042) plotted degradation
 against alpha=100 baseline accuracy and treated that as a capacity axis. Rejected: baseline
 accuracy is a joint outcome of capacity, architecture, convexity, and loss landscape, not
 capacity alone -- our own data shows a many-to-one mapping (LR: 69.4% baseline, 4.6pp
@@ -949,10 +949,10 @@ report (forthcoming this session) for the bracketing result.
 
 ---
 
-## D-040 · 2026-08-20 — Worst-client methodology persisted as code (`scripts/worst_client.py`); a real bug found and fixed while verifying it
+## D-045 · 2026-08-20 — Worst-client methodology persisted as code (`scripts/worst_client.py`); a real bug found and fixed while verifying it
 
 **What:** `scripts/worst_client.py` extracts the worst-client aggregation methodology
-(D-039: per (arm, model, condition, seed, fold) minimum across clients, then mean/std
+(D-044: per (arm, model, condition, seed, fold) minimum across clients, then mean/std
 across replicates) into a reusable module reading any arm's long-format results CSV.
 
 **Verification against Arm 4 / Arm 5 (single-arm files): exact match on first attempt.**
@@ -984,25 +984,25 @@ reporting.
 
 ---
 
-## D-041 · 2026-08-20 — E=5 confirmed to produce a genuine training effect (unlike E=1)
+## D-046 · 2026-08-20 — E=5 confirmed to produce a genuine training effect (unlike E=1)
 
 **What:** Reused already-captured angle data (`results/angle_capture/arm4_100_0_0.npz`,
-`arm4_0.1_0_0.npz`, from D-038's verification sample) rather than re-running anything.
+`arm4_0.1_0_0.npz`, from D-043's verification sample) rather than re-running anything.
 Compared the final-round aggregated global parameters at alpha=100 vs alpha=0.1, same
 seed (0) and fold (0).
 
 **Result:** max absolute elementwise difference = 0.9148 -- materially different, not
-bit-identical. Confirms E=5 (`LOCAL_EPOCHS=5`, the real sweep's value, D-039) does NOT
-reproduce the E=1 degeneracy found in the invalidated capacity control (D-037), where
+bit-identical. Confirms E=5 (`LOCAL_EPOCHS=5`, the real sweep's value, D-044) does NOT
+reproduce the E=1 degeneracy found in the invalidated capacity control (D-042), where
 the aggregated model was identical across every alpha condition. The real Arm 1/2/4/5
 sweeps measure a genuine training effect, not pure evaluation composition, at the
-protocol level -- though D-042 (below) shows composition still contributes a real,
+protocol level -- though D-047 (below) shows composition still contributes a real,
 non-negligible share of the *reported worst-client movement*, which is a distinct
 question from whether the model itself changes at all.
 
 ---
 
-## D-042 · 2026-08-20 — Composition-vs-training decomposition: dominant for LR, minor for MLP, VQC pending
+## D-047 · 2026-08-20 — Composition-vs-training decomposition: dominant for LR, minor for MLP, VQC pending
 
 **What:** Decomposed observed worst-client decline (alpha=100->0.1) into a
 composition-only component (fixed alpha=100-trained model, evaluated against every
@@ -1015,7 +1015,7 @@ training via FedAvg matching the real Arm 2 protocol exactly).
 | LR | 4.66pp | 3.82pp | **82.0%** | 0.84pp |
 | MLP | 18.46pp | 4.99pp | 27.0% | 13.47pp |
 
-**This materially changes how LR's result should be read.** D-028/D-034 reported LR's
+**This materially changes how LR's result should be read.** D-028/D-039 reported LR's
 worst-client decline (4.66pp) as evidence the heterogeneity penalty is real but
 invisible in global accuracy. That's still true of the *global* flatness finding, but
 the worst-client decline itself is now shown to be **82% evaluation-slice composition,
@@ -1035,7 +1035,7 @@ before launching (seed=0/fold=0/alpha=100 retrained, bit-identical to
 
 ---
 
-## D-043 · 2026-08-20 — Pre-registered prediction: VQC composition-vs-training decomposition
+## D-048 · 2026-08-20 — Pre-registered prediction: VQC composition-vs-training decomposition
 
 **What:** Recording a prediction before reading the VQC composition decomposition
 result, which finished computing (50/50 replicates, 5616.7s) but has not yet been
@@ -1053,7 +1053,7 @@ is mostly real.
 **Why this is the prediction that matters most:** every other prediction in this
 project's decision log has been about a specific mechanism (wraparound boundary,
 E=1 degeneracy, etc.); this one is about whether the entire capacity-confound
-concern that motivated D-037's redesign (D-039's rejection of the accuracy-axis
+concern that motivated D-042's redesign (D-044's rejection of the accuracy-axis
 framing, the pending Step 4 parameter-count scatter) is still live at all. A small
 VQC residual would suggest the scatter is designed around an effect that's mostly
 not there. A substantial residual keeps the original question open and the scatter
@@ -1063,12 +1063,12 @@ meaningful as scoped.
 
 ---
 
-## D-044 · 2026-08-20 — VQC composition decomposition result: prediction resolved, capacity confound not weakened
+## D-049 · 2026-08-20 — VQC composition decomposition result: prediction resolved, capacity confound not weakened
 
 **What:** Completed the composition-only decomposition for VQC (50 replicates, alpha=100
 training only, evaluated against all 5 conditions' test-slice composition,
 `scripts/vqc_composition_worker.py`). Full comparison against the pre-registered
-prediction (D-043):
+prediction (D-048):
 
 | model | observed decline (a=100->0.1) | composition-only decline | % of movement that is composition | residual (training effect) |
 |---|---|---|---|---|
@@ -1084,7 +1084,7 @@ not strongly distinguishable from zero but clearly not substantially positive. *
 no positive VQC-specific training-heterogeneity effect left once composition is
 accounted for.** The capacity confound this control set out to test is not weakened by
 this evidence -- if anything it is strengthened: the VQC's smaller-than-MLP observed
-decline (D-034) is now explained by evaluation composition to at least the same degree
+decline (D-039) is now explained by evaluation composition to at least the same degree
 as LR's, not by a genuine intermediate training-heterogeneity sensitivity.
 
 **Composition-only decline differs across models despite identical test slices** (LR
@@ -1100,7 +1100,7 @@ modest LR-vs-MLP gap itself does not trace to a single clean factor identified h
 
 ---
 
-## D-045 · 2026-08-20 — SUPERSEDES D-028 (in part): LR's worst-client decline was 82% evaluation composition
+## D-050 · 2026-08-20 — SUPERSEDES D-028 (in part): LR's worst-client decline was 82% evaluation composition
 
 **D-028 is not edited or deleted** -- this entry supersedes one specific claim within it,
 per the append-only rule.
@@ -1111,16 +1111,16 @@ exists; we were measuring in the wrong place") -- i.e. LR's 4.66pp worst-client 
 was reported as evidence of a genuine heterogeneity penalty on individual clients, distinct
 from and correcting the flat global-accuracy finding.
 
-**What the decomposition showed (D-042, 2026-08-20):** LR's 4.66pp observed decline is
+**What the decomposition showed (D-047, 2026-08-20):** LR's 4.66pp observed decline is
 82.0% evaluation-slice composition (a fixed alpha=100-trained model, scored against
 increasingly skewed held-out slices) and only 0.84pp (18.0%) a genuine training-time
 heterogeneity effect. LR's model barely changes with alpha at all -- consistent with,
-and now better explained by, its convexity (D-031) -- but the *worst-client accuracy
+and now better explained by, its convexity (D-036) -- but the *worst-client accuracy
 number itself* mostly reflects which specific slice happens to be evaluated, not how
 much the model changed.
 
 **Net effect:** row 2 of D-028's decision table ("penalty exists, wrong measurement
-location") is **not wrong for MLP** (73% of its decline is real, D-042) but **was
+location") is **not wrong for MLP** (73% of its decline is real, D-047) but **was
 overstated for LR**, where the "wrong measurement location" framing implied a real,
 substantial hidden penalty that mostly is not there. The corrected reading: LR is
 close to what D-028's row 1 already described ("mechanism fires, model absorbs it")
@@ -1129,17 +1129,17 @@ heterogeneity almost entirely, with only a small residual client-level effect.
 
 ---
 
-## D-046 · 2026-08-20 — SUPERSEDES D-034 (in part): VQC's decline is not intermediate training-heterogeneity sensitivity
+## D-051 · 2026-08-20 — SUPERSEDES D-039 (in part): VQC's decline is not intermediate training-heterogeneity sensitivity
 
-**D-034 is not edited or deleted** -- this entry supersedes one specific claim within it.
+**D-039 is not edited or deleted** -- this entry supersedes one specific claim within it.
 
-**What D-034 claimed (2026-08-20):** "In magnitude, the [VQC's 7.25pp] decline sits
+**What D-039 claimed (2026-08-20):** "In magnitude, the [VQC's 7.25pp] decline sits
 **between** the convex reference LR (4.66pp) and the matched non-convex comparator MLP
 (18.46pp) -- more heterogeneity-sensitive than LR, less than MLP" -- framed as the VQC
 occupying a genuine intermediate position on a training-heterogeneity-sensitivity
 spectrum between the two classical references.
 
-**What the decomposition showed (D-044, 2026-08-20):** VQC's composition-only decline
+**What the decomposition showed (D-049, 2026-08-20):** VQC's composition-only decline
 (8.50pp) *exceeds* its observed decline (7.25pp) -- composition accounts for 117.2% of
 the observed movement, and the residual training effect is slightly negative (-1.25pp,
 not strongly distinguishable from zero given a paired SE of 1.07pp, but clearly not
@@ -1147,23 +1147,23 @@ substantially positive). The VQC shows **no positive training-heterogeneity effe
 once composition is accounted for -- more decisively than LR (82% composition), not an
 intermediate case between LR and MLP on the training-effect axis at all.
 
-**Net effect:** D-034's "sits between LR and MLP" claim remains numerically true of the
+**Net effect:** D-039's "sits between LR and MLP" claim remains numerically true of the
 **observed** decline (7.25pp does fall between 4.66pp and 18.46pp), but the mechanistic
 interpretation -- an intermediate degree of genuine heterogeneity-sensitivity -- is not
 supported. The VQC's observed position between LR and MLP is better explained as: its
 baseline (alpha=100) accuracy is the lowest of the three (64.9% vs ~69%), which alone
-produces the largest composition-only swing of the three (D-044), and there is no
-additional real training effect layered on top, unlike MLP's (D-042). This also
-resolves D-037's original capacity-confound question, which the redesigned control
-(D-039 onward) set out to test: the evidence does not support model family (quantum vs.
+produces the largest composition-only swing of the three (D-049), and there is no
+additional real training effect layered on top, unlike MLP's (D-047). This also
+resolves D-042's original capacity-confound question, which the redesigned control
+(D-044 onward) set out to test: the evidence does not support model family (quantum vs.
 classical) as the explanation for the VQC's smaller observed decline than MLP's --
 composition/baseline-accuracy differences explain it at least as well.
 
 ---
 
-## D-047 · 2026-08-20 — Methodology note: the Arm1/Arm2 pooling bug is the argument for the reproducibility rule
+## D-052 · 2026-08-20 — Methodology note: the Arm1/Arm2 pooling bug is the argument for the reproducibility rule
 
-**What:** D-040 found and fixed a real bug (worst-client numbers silently pooling arm1
+**What:** D-045 found and fixed a real bug (worst-client numbers silently pooling arm1
 and arm2 rows sharing a model label, because the first version of the extraction module
 grouped by `model` without `arm`) while persisting the analysis as code. This entry
 records why that episode belongs in the paper's Methodology section, not just the

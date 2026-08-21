@@ -40,7 +40,7 @@ advantage for either approach. Built for a university capstone
   process-kill test (classical grid) and in production over two
   unattended overnight runs (Arm 4: 8.97hr, Arm 5: 7.48hr, zero failures)
 
-**Primary metric (D-029/D-030): worst-client accuracy, reported first.**
+**Primary metric (D-034/D-035): worst-client accuracy, reported first.**
 Global accuracy is secondary. Rationale: global accuracy is flat across
 the entire α sweep for the convex reference and stays near-flat for the
 matched MLP except at the most extreme skew, while worst-client accuracy
@@ -63,7 +63,7 @@ smoothed over:**
   partition-invariant (verified directly against the trained parameters)
   — so its degradation number doesn't cleanly answer the original
   question. See `docs/arm4_capacity_control_report.md`.
-- The D-036 circular-mean null result's explanation (angles never reach
+- The D-041 circular-mean null result's explanation (angles never reach
   the wraparound boundary) was checked directly against real trained
   parameters, not just asserted — confirmed: max angle magnitude observed
   is 1.35 radians short of π, with no trend toward the boundary as

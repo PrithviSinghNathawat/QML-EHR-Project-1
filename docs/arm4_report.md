@@ -3,7 +3,7 @@
 2026-08-19/20. Full 5-fold CV x 10 seeds x 5 conditions sweep (250
 replicates), identical protocol to the classical diagnostic
 (`docs/diagnostic_report.md`), same partitions, same seeds, same 6
-features. Primary metric is worst-client accuracy (D-030); global accuracy
+features. Primary metric is worst-client accuracy (D-035); global accuracy
 is secondary.
 
 **VQC trained properly.** Task 2 sanity check (2 clients, alpha=100, 15

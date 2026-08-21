@@ -422,9 +422,9 @@ No course of action recommended, per instruction -- interpretation is Prithvi's.
 ## 2026-08-19/20 — Arm 4 (VQC + FedAvg): built, sanity-checked, swept, and Arm 5 launched
 
 New branch: `prithvi-arm4-vqc`. Third occurrence of the "decisions pasted separately"
-gap this session's opening message -- logged what was actually stated inline (D-029)
+gap this session's opening message -- logged what was actually stated inline (D-034)
 and flagged the rest missing, same as the last two sessions. A follow-up message
-arrived mid-turn with the D-030-033 decisions embedded verbatim this time (good --
+arrived mid-turn with the D-035-038 decisions embedded verbatim this time (good --
 logged as-is) plus a "when Arm 4 completes" continuation prompt that assumed
 completion before it had actually happened; held off following it until the real
 runtime estimate was in hand, per the original message's explicit "tell me before
@@ -458,7 +458,7 @@ progress written to `results/runs_arm4.csv` incrementally, checkable without wai
 on a notification) were both validated on a small batch before the full launch and
 both worked correctly during the real 9-hour run with no manual intervention needed.
 
-**Headline finding (full detail: `docs/arm4_report.md`, decisions.md D-034):** VQC
+**Headline finding (full detail: `docs/arm4_report.md`, decisions.md D-039):** VQC
 worst-client accuracy declines monotonically with alpha, same as both classical
 models, but the decline (7.25pp, alpha=100->0.1) sits *between* LR's (4.66pp) and
 MLP's (18.46pp) -- more heterogeneity-sensitive than the convex reference, less than
@@ -498,7 +498,7 @@ mean only differs numerically from a linear mean near the angle-wraparound bound
 and this training regime (small LR, narrow init, modest rounds) probably never gets
 the parameters there. Reportable as a real null result (250 replicates, not a
 small-sample fluke), not as "inconclusive." Full writeup: `docs/arm5_report.md`,
-decisions.md D-036.
+decisions.md D-041.
 
 **Overnight arc, end to end:** Arm 4 sanity-checked (loss decreasing, not a barren
 plateau) -> real 4-replicate timing test (~14.9hr estimated) -> confirmed with
@@ -512,7 +512,7 @@ pushed to `prithvi-arm4-vqc`, PR opened.
 
 ## 2026-08-20 — Two follow-ups: capacity-matched MLP, and verifying the circular-mean explanation
 
-**Capacity control (D-037).** Calibrated a weakened MLP (hidden=1, 9 params) against
+**Capacity control (D-042).** Calibrated a weakened MLP (hidden=1, 9 params) against
 the VQC's alpha=100 worst-client baseline. Hidden units alone (hidden=1, full 20
 rounds/5 local epochs) only got to 0.6852 vs target 0.6488 -- needed early stopping
 too. Grid-searched rounds/local_epochs down to `rounds=4, local_epochs=1`, which hit
@@ -546,7 +546,7 @@ trained models) -- doesn't cleanly answer the original capacity-confound questio
 Reported this limitation prominently rather than presenting the 36.77pp number
 without it. Full writeup: `docs/arm4_capacity_control_report.md`.
 
-**Verifying the D-036 circular-mean explanation (D-038).** The original attribution
+**Verifying the D-041 circular-mean explanation (D-043).** The original attribution
 (angles never reach the wraparound boundary) was never actually checked against real
 data -- the sweeps didn't save raw parameter vectors, only metrics. Re-ran a
 20-replicate sample (5 conditions x 2 seeds x 1 fold, both arms) with the training
@@ -585,7 +585,7 @@ held-out slice of that fold's test set (`arm4_worker.py:62`,
 `cv_protocol.py:79-91`), not a shared test set -- confirmed the conflation concern is
 real, not hypothetical. Minimum-then-average methodology traced to
 `plot_diagnostic.py:48-49`, the only place it existed as committed code before today.
-Logged as D-039.
+Logged as D-044.
 
 **Then two follow-up tasks arrived before Step 2: persist the analysis as code, and
 decompose worst-client movement into composition vs. training effects.**
@@ -599,7 +599,7 @@ holds both arm1 (centralized, evaluated per-condition) and arm2 (federated,
 trained-per-condition) rows under the same model label ("LR"), and the first version
 of the module grouped by `model` without `arm`, silently pooling two different
 experiments. Fixed by adding `arm` as a mandatory grouping key; re-verified, exact
-match. Logged as D-040, with a comment in the module itself so this doesn't regress.
+match. Logged as D-045, with a comment in the module itself so this doesn't regress.
 
 **Task 2 (decompose composition vs. training).** For LR and MLP: trained once at
 alpha=100 (federated, matching the real Arm 2 protocol), evaluated that fixed model
@@ -612,16 +612,16 @@ against every condition's test-slice composition. Result, and it's a big one:
 
 **LR's reported worst-client decline is mostly an artifact of scoring a nearly-fixed
 model against increasingly skewed test slices, not a training-heterogeneity effect.**
-MLP's is mostly real. This changes how D-028/D-034's LR finding should be read --
+MLP's is mostly real. This changes how D-028/D-039's LR finding should be read --
 flagged prominently rather than left for the paper draft to discover. Logged as
-D-042 (LR/MLP portion; VQC portion pending).
+D-047 (LR/MLP portion; VQC portion pending).
 
 Before committing to VQC compute (50 replicates, alpha=100 training only, ~1.5-2hr):
 verified exact reproducibility first (retrained seed=0/fold=0/alpha=100, bit-identical
 to the original saved metrics) -- launched only after that passed. Also confirmed,
 reusing already-captured angle data (no re-run needed): E=5's trained parameters
 differ materially across alpha (max diff 0.91), unlike E=1's bit-identical case --
-D-041.
+D-046.
 
 **Committed locally per instruction, not pushed.** VQC composition decomposition
 running in the background; reporting back before Step 4 (capacity scatter) once it
@@ -634,7 +634,7 @@ completes.
 Prithvi asked to log the prediction before reading the numbers: if the VQC is
 genuinely low-capacity, composition share should resemble LR's (~82%) and the
 residual should shrink; if the residual stays substantial, the confound weakens.
-Logged verbatim as D-043 before computing anything from the 50 completed replicate
+Logged verbatim as D-048 before computing anything from the 50 completed replicate
 files.
 
 **Then computed it.** VQC composition-only decline (alpha=100->0.1): 8.50pp, vs an
@@ -643,7 +643,7 @@ observed decline of 7.25pp -- composition alone *exceeds* the observed movement
 seed/fold): mean paired residual -0.0124, SE 0.0107 -- not strongly distinguishable
 from zero, clearly not substantially positive. The prediction's "genuinely
 low-capacity" branch is confirmed, more decisively than predicted (VQC's composition
-share exceeds LR's). Logged as D-044.
+share exceeds LR's). Logged as D-049.
 
 **Composition-only decline also differs meaningfully across the three fixed models**
 (LR 3.82, MLP 4.99, VQC 8.50pp) despite all three seeing identical test slices.
@@ -655,14 +655,14 @@ explain it either. Reported honestly that the LR-vs-MLP gap doesn't trace to a s
 clean factor found here, rather than forcing a tidy story. VQC's much larger swing is
 most simply attributable to it being the weakest baseline of the three (64.9% vs ~69%).
 
-**Task 1 (supersede D-028/D-034):** did not edit either entry -- appended D-045
+**Task 1 (supersede D-028/D-039):** did not edit either entry -- appended D-050
 (supersedes D-028's LR claim: the "penalty exists, wrong measurement location"
-framing was overstated for LR specifically, though correct for MLP) and D-046
-(supersedes D-034's "VQC sits between LR and MLP" claim: true of the observed number,
+framing was overstated for LR specifically, though correct for MLP) and D-051
+(supersedes D-039's "VQC sits between LR and MLP" claim: true of the observed number,
 not true of the underlying mechanism -- there's no genuine intermediate
 training-heterogeneity sensitivity, just a lower baseline producing a larger
-composition swing with no real training effect on top). Also logged D-047, framing
-the Arm1/Arm2 pooling bug (D-040) explicitly as the argument for the project's
+composition swing with no real training effect on top). Also logged D-052, framing
+the Arm1/Arm2 pooling bug (D-045) explicitly as the argument for the project's
 reproducibility rule, per Prithvi's note that it belongs in Methodology -- the bug
 was invisible for two days across three published reports until the numbers were
 regenerated from committed code and diffed.

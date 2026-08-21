@@ -34,25 +34,25 @@ alternatives; this table is a lookup, not a substitute.
 | D-026 | 2026-08-18 | MLP parameter count: 17, matched to the real VQC (18), not the requested ~36 |
 | D-027 | 2026-08-18 | `run_federated` interface amendment: optional divergence tracking |
 | D-028 | 2026-08-18 | Diagnostic session findings: heterogeneity penalty exists, measured in the wrong place |
-| D-029 | 2026-08-19 | Worst-client accuracy is the primary metric; global is secondary |
-| D-030 | 2026-08-19 | Primary metric changed to worst-client performance (verbatim, with evidence + attribution caution) |
-| D-031 | 2026-08-19 | Convexity mediates whether the penalty surfaces globally |
-| D-032 | 2026-08-19 | Natural institutional heterogeneity is milder than commonly-used synthetic settings (answers D-009) |
-| D-033 | 2026-08-19 | Protocol: 5-fold stratified CV x 10 seeds (named protocol decision) |
-| D-034 | 2026-08-20 | Arm 4 (VQC+FedAvg) results: trained properly, penalty magnitude between LR and MLP |
-| D-035 | 2026-08-20 | Arm 5 (VQC + circular-mean aggregation) built and launched |
-| D-036 | 2026-08-20 | Arm 5 results: circular-mean aggregation makes no measurable difference vs FedAvg |
-| D-037 | 2026-08-20 | Capacity control for Arm 4: weakened MLP, calibration mismatch, training degeneracy found |
-| D-038 | 2026-08-20 | D-036 circular-mean explanation verified directly: confirmed |
-| D-039 | 2026-08-20 | Protocol parameters recovered from source (round count=20, worst-client = own-slice, per-fold-then-averaged); capacity-control redesign to parameter-count bracketing |
-| D-040 | 2026-08-20 | Worst-client methodology persisted as code; real bug found (missing arm grouping key) and fixed |
-| D-041 | 2026-08-20 | E=5 confirmed to produce a genuine training effect (max param diff 0.91, unlike E=1's bit-identical) |
-| D-042 | 2026-08-20 | Composition-vs-training decomposition: 82% composition for LR, 27% for MLP, VQC pending |
-| D-043 | 2026-08-20 | Pre-registered prediction: VQC composition share should resemble LR's if capacity explains the effect |
-| D-044 | 2026-08-20 | VQC decomposition result: composition = 117% of decline, residual negative -- capacity confound not weakened |
-| D-045 | 2026-08-20 | SUPERSEDES D-028 (in part): LR's worst-client decline was 82% evaluation composition |
-| D-046 | 2026-08-20 | SUPERSEDES D-034 (in part): VQC's decline is not intermediate training-heterogeneity sensitivity |
-| D-047 | 2026-08-20 | Methodology note: the Arm1/Arm2 pooling bug is the argument for the reproducibility rule |
+| D-034 | 2026-08-19 | Worst-client accuracy is the primary metric; global is secondary |
+| D-035 | 2026-08-19 | Primary metric changed to worst-client performance (verbatim, with evidence + attribution caution) |
+| D-036 | 2026-08-19 | Convexity mediates whether the penalty surfaces globally |
+| D-037 | 2026-08-19 | Natural institutional heterogeneity is milder than commonly-used synthetic settings (answers D-009) |
+| D-038 | 2026-08-19 | Protocol: 5-fold stratified CV x 10 seeds (named protocol decision) |
+| D-039 | 2026-08-20 | Arm 4 (VQC+FedAvg) results: trained properly, penalty magnitude between LR and MLP |
+| D-040 | 2026-08-20 | Arm 5 (VQC + circular-mean aggregation) built and launched |
+| D-041 | 2026-08-20 | Arm 5 results: circular-mean aggregation makes no measurable difference vs FedAvg |
+| D-042 | 2026-08-20 | Capacity control for Arm 4: weakened MLP, calibration mismatch, training degeneracy found |
+| D-043 | 2026-08-20 | D-041 circular-mean explanation verified directly: confirmed |
+| D-044 | 2026-08-20 | Protocol parameters recovered from source (round count=20, worst-client = own-slice, per-fold-then-averaged); capacity-control redesign to parameter-count bracketing |
+| D-045 | 2026-08-20 | Worst-client methodology persisted as code; real bug found (missing arm grouping key) and fixed |
+| D-046 | 2026-08-20 | E=5 confirmed to produce a genuine training effect (max param diff 0.91, unlike E=1's bit-identical) |
+| D-047 | 2026-08-20 | Composition-vs-training decomposition: 82% composition for LR, 27% for MLP, VQC pending |
+| D-048 | 2026-08-20 | Pre-registered prediction: VQC composition share should resemble LR's if capacity explains the effect |
+| D-049 | 2026-08-20 | VQC decomposition result: composition = 117% of decline, residual negative -- capacity confound not weakened |
+| D-050 | 2026-08-20 | SUPERSEDES D-028 (in part): LR's worst-client decline was 82% evaluation composition |
+| D-051 | 2026-08-20 | SUPERSEDES D-039 (in part): VQC's decline is not intermediate training-heterogeneity sensitivity |
+| D-052 | 2026-08-20 | Methodology note: the Arm1/Arm2 pooling bug is the argument for the reproducibility rule |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the

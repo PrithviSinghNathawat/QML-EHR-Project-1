@@ -1,6 +1,6 @@
-# Verifying the D-036 Circular-Mean Null Explanation
+# Verifying the D-041 Circular-Mean Null Explanation
 
-2026-08-20, follow-up to `docs/arm5_report.md`. D-036 attributed the
+2026-08-20, follow-up to `docs/arm5_report.md`. D-041 attributed the
 circular-mean-vs-FedAvg null result to trained rotation angles never
 reaching the wraparound boundary (circular mean only diverges numerically
 from a linear mean near ±π). This was a plausible but unverified
@@ -62,5 +62,5 @@ project's VQC stay well inside the wraparound-sensitive region under every
 condition tested — driven by the small learning rate (0.1), narrow random
 initialization (0.1×N(0,1)), and modest round count (20), not by anything
 alpha-dependent. Circular-mean and FedAvg aggregation computing
-near-identical results (D-036) is explained by this, not by a
+near-identical results (D-041) is explained by this, not by a
 coincidence or a masked bug. No alternative explanation is needed.

@@ -382,7 +382,7 @@ Fast (classical) — a few seconds.
 
 **Known finding, not a bug:** global accuracy for `weak-MLP` is identical
 to 4 decimal places across every condition, for every seed/fold. This is
-real — see `docs/arm4_capacity_control_report.md` and D-037 for why
+real — see `docs/arm4_capacity_control_report.md` and D-042 for why
 (`local_epochs=1` + FedAvg is mathematically partition-invariant for a
 single full-batch local step). If this configuration's parameters
 (`HIDDEN`, `FEDERATED_ROUNDS`, `LOCAL_EPOCHS` at the top of the script)
@@ -391,7 +391,7 @@ any degradation number from this script.
 
 ---
 
-## Angle capture (verifying the D-036 circular-mean explanation)
+## Angle capture (verifying the D-041 circular-mean explanation)
 
 **Command:**
 ```

@@ -116,7 +116,7 @@ heterogeneity even in this degenerate regime (0.034 -> 0.352) -- the
 underlying drift mechanism this project measures is present even when
 FedAvg's aggregation happens to cancel it out at the global level. That's
 consistent with, not contradictory to, the rest of this project's
-findings (D-028, D-034).
+findings (D-028, D-039).
 
 ## Raw numbers
 
