@@ -566,3 +566,65 @@ rather than trusting, without adjusting anything to make either land somewhere
 cleaner. Pushing now.
 
 ---
+
+## 2026-08-20 — Capacity control redesigned; protocol recovered from source; a real bug caught mid-verification
+
+Prithvi rejected the previous capacity control's framing (baseline accuracy as a
+capacity axis) with a clean counterexample from our own data: LR and MLP sit at
+nearly the same alpha=100 baseline (69.4% vs 69.9%) but degrade by very different
+amounts (4.6pp vs 18.4pp) -- same x, four times the y. Redesigned around parameter
+count instead, framed as bracketing ("does any MLP width reproduce the VQC's
+degradation") rather than explaining. Gated, step-by-step, explicit "do not proceed
+past a gate" instruction -- followed literally, stopped at GATE 1 after Step 1 and
+waited.
+
+**Step 1, recovered from source, not memory or docs:** round count = 20, consistent
+across `run_grid.py:35`, `arm4_worker.py:28`, `arm5_worker.py:22`,
+`run_diagnostic.py:38`. Worst-client evaluation: each client scored on its own
+held-out slice of that fold's test set (`arm4_worker.py:62`,
+`cv_protocol.py:79-91`), not a shared test set -- confirmed the conflation concern is
+real, not hypothetical. Minimum-then-average methodology traced to
+`plot_diagnostic.py:48-49`, the only place it existed as committed code before today.
+Logged as D-039.
+
+**Then two follow-up tasks arrived before Step 2: persist the analysis as code, and
+decompose worst-client movement into composition vs. training effects.**
+
+**Task 1 (persist as code) caught a real bug, not a documentation gap.** Built
+`scripts/worst_client.py`, verified against Arm 4/Arm 5 -- exact match immediately
+(those files hold one arm each). Verified against the classical diagnostic file --
+**failed**: LR alpha=100 reproduced as 0.6917 vs the published 0.6942. Did not adjust
+anything to make it match -- traced it instead: `results/diagnostic_results.csv`
+holds both arm1 (centralized, evaluated per-condition) and arm2 (federated,
+trained-per-condition) rows under the same model label ("LR"), and the first version
+of the module grouped by `model` without `arm`, silently pooling two different
+experiments. Fixed by adding `arm` as a mandatory grouping key; re-verified, exact
+match. Logged as D-040, with a comment in the module itself so this doesn't regress.
+
+**Task 2 (decompose composition vs. training).** For LR and MLP: trained once at
+alpha=100 (federated, matching the real Arm 2 protocol), evaluated that fixed model
+against every condition's test-slice composition. Result, and it's a big one:
+
+| model | observed decline | composition-only | training residual |
+|---|---|---|---|
+| LR | 4.66pp | 3.82pp (**82%**) | 0.84pp |
+| MLP | 18.46pp | 4.99pp (27%) | 13.47pp |
+
+**LR's reported worst-client decline is mostly an artifact of scoring a nearly-fixed
+model against increasingly skewed test slices, not a training-heterogeneity effect.**
+MLP's is mostly real. This changes how D-028/D-034's LR finding should be read --
+flagged prominently rather than left for the paper draft to discover. Logged as
+D-042 (LR/MLP portion; VQC portion pending).
+
+Before committing to VQC compute (50 replicates, alpha=100 training only, ~1.5-2hr):
+verified exact reproducibility first (retrained seed=0/fold=0/alpha=100, bit-identical
+to the original saved metrics) -- launched only after that passed. Also confirmed,
+reusing already-captured angle data (no re-run needed): E=5's trained parameters
+differ materially across alpha (max diff 0.91), unlike E=1's bit-identical case --
+D-041.
+
+**Committed locally per instruction, not pushed.** VQC composition decomposition
+running in the background; reporting back before Step 4 (capacity scatter) once it
+completes.
+
+---

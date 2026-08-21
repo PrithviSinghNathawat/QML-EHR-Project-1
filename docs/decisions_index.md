@@ -44,6 +44,10 @@ alternatives; this table is a lookup, not a substitute.
 | D-036 | 2026-08-20 | Arm 5 results: circular-mean aggregation makes no measurable difference vs FedAvg |
 | D-037 | 2026-08-20 | Capacity control for Arm 4: weakened MLP, calibration mismatch, training degeneracy found |
 | D-038 | 2026-08-20 | D-036 circular-mean explanation verified directly: confirmed |
+| D-039 | 2026-08-20 | Protocol parameters recovered from source (round count=20, worst-client = own-slice, per-fold-then-averaged); capacity-control redesign to parameter-count bracketing |
+| D-040 | 2026-08-20 | Worst-client methodology persisted as code; real bug found (missing arm grouping key) and fixed |
+| D-041 | 2026-08-20 | E=5 confirmed to produce a genuine training effect (max param diff 0.91, unlike E=1's bit-identical) |
+| D-042 | 2026-08-20 | Composition-vs-training decomposition: 82% composition for LR, 27% for MLP, VQC pending |
 
 **D-009 through D-014 are a known gap** — referenced in session instructions
 across multiple sessions but never actually supplied as content, and the

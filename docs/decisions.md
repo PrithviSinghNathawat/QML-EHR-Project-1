@@ -907,3 +907,130 @@ just plausible -- driven by the small learning rate (0.1), narrow initialization
 (0.1*N(0,1)), and modest round count (20), independent of alpha.
 
 ---
+
+## D-039 · 2026-08-20 — Protocol parameters recovered from source (round count, worst-client evaluation)
+
+**What:** Two protocol parameters, undocumented as explicit decisions until now, recovered
+directly from the actual sweep code that produced Arms 1, 2, 4, 5 (not from the invalidated
+E=1 capacity control, not inferred, not taken from markdown).
+
+**Federated round count: 20.** Identical constant `FEDERATED_ROUNDS = 20` in
+`scripts/run_grid.py:35`, `scripts/arm4_worker.py:28`, `scripts/arm5_worker.py:22`,
+`scripts/run_diagnostic.py:38`. `LOCAL_EPOCHS = 5` (D-005) likewise consistent across all four.
+
+**Worst-client accuracy is computed on each client's own held-out slice of that fold's test
+set, not a shared/global test set.** `scripts/arm4_worker.py:62`:
+`client_test = split_by_client(X_test, y_test, assign, df_test_fold)` -- `X_test`/`y_test` is
+the fold's held-out 20% (fold-determined, not alpha-determined); `split_by_client`
+(`scripts/cv_protocol.py:79-91`) slices it by the alpha-dependent client `assign`. Consequence
+(flagged, addressed in Step 3 below): as alpha drops, per-client test slices become more
+class-skewed, since the same alpha-dependent assignment determines both training partition and
+test-slice membership. Some undetermined share of every reported worst-client degradation
+number may reflect this evaluation-composition effect rather than a pure training effect --
+not previously checked directly.
+
+**Minimum is taken per (seed, fold), then averaged across the 50 replicates -- not pooled.**
+The only committed-code source of this methodology is `scripts/plot_diagnostic.py:48-49`
+(`groupby([...,"seed","fold"])["accuracy"].min()` then `groupby([...]).agg(["mean","std"])`).
+Written for the classical diagnostic sweep; the identical pattern was replicated in ad-hoc
+interactive analysis for the Arm 4/5 numbers in `docs/arm4_report.md`, but was never itself
+saved as a script until this recovery -- a real documentation gap, now closed by this entry.
+
+**Design change, this session:** the previous capacity control (D-037) plotted degradation
+against alpha=100 baseline accuracy and treated that as a capacity axis. Rejected: baseline
+accuracy is a joint outcome of capacity, architecture, convexity, and loss landscape, not
+capacity alone -- our own data shows a many-to-one mapping (LR: 69.4% baseline, 4.6pp
+degradation; MLP: 69.9% baseline, 18.4pp degradation -- same baseline, 4x the degradation).
+Replaced with parameter count as the x-axis (controlled, family-neutral, but not a licensed
+proxy either -- the LR point stays on the resulting plot specifically to bound how far it can
+be trusted) and a bracketing framing rather than an explanatory one: not "does capacity explain
+the VQC's degradation" but "does any MLP width reproduce it." See the full capacity-control
+report (forthcoming this session) for the bracketing result.
+
+---
+
+## D-040 · 2026-08-20 — Worst-client methodology persisted as code (`scripts/worst_client.py`); a real bug found and fixed while verifying it
+
+**What:** `scripts/worst_client.py` extracts the worst-client aggregation methodology
+(D-039: per (arm, model, condition, seed, fold) minimum across clients, then mean/std
+across replicates) into a reusable module reading any arm's long-format results CSV.
+
+**Verification against Arm 4 / Arm 5 (single-arm files): exact match on first attempt.**
+`results/arm4_diagnostic_results.csv` and `results/arm5_diagnostic_results.csv` each
+contain only one arm, so grouping by model alone happened to be safe there. Reproduced
+every published number in `docs/arm4_report.md`/`docs/arm5_report.md` to 4 decimal
+places.
+
+**Verification against the classical diagnostic (`results/diagnostic_results.csv`):
+failed on first attempt, a real bug, not a data problem.** That file contains BOTH
+arm1 (centralized, evaluated per-condition) and arm2 (federated, trained
+per-condition) rows sharing the same `model` label ("LR", "MLP"). The first version of
+`worst_client.py` grouped by `(model, condition, seed, fold)` only -- no `arm` column
+-- which silently pooled arm1 and arm2 rows together, producing numbers that did not
+match `docs/diagnostic_report.md` (e.g. LR alpha=100: 0.6917 reproduced vs 0.6942
+published, a 0.25pp discrepancy that would have been larger elsewhere, e.g. alpha=0.1:
+0.6424 vs 0.6476). **Not silently adjusted** -- root-caused (confirmed via
+`df['arm'].value_counts()` showing 200 arm1 + 200 arm2 rows at exactly the condition
+where the mismatch appeared), fixed by adding `arm` as a required grouping key, and
+re-verified: now reproduces every published arm2 number in `docs/diagnostic_report.md`
+exactly. Comment left in the module explaining why `arm` is mandatory, so this doesn't
+regress.
+
+**Consequence:** if a future results CSV analysis groups by `model` without `arm`, and
+that CSV contains more than one arm sharing a model label, it will silently produce
+wrong numbers the same way. `scripts/worst_client.py` is now the canonical, tested
+entry point -- prefer it over ad-hoc groupby analysis for any future worst-client
+reporting.
+
+---
+
+## D-041 · 2026-08-20 — E=5 confirmed to produce a genuine training effect (unlike E=1)
+
+**What:** Reused already-captured angle data (`results/angle_capture/arm4_100_0_0.npz`,
+`arm4_0.1_0_0.npz`, from D-038's verification sample) rather than re-running anything.
+Compared the final-round aggregated global parameters at alpha=100 vs alpha=0.1, same
+seed (0) and fold (0).
+
+**Result:** max absolute elementwise difference = 0.9148 -- materially different, not
+bit-identical. Confirms E=5 (`LOCAL_EPOCHS=5`, the real sweep's value, D-039) does NOT
+reproduce the E=1 degeneracy found in the invalidated capacity control (D-037), where
+the aggregated model was identical across every alpha condition. The real Arm 1/2/4/5
+sweeps measure a genuine training effect, not pure evaluation composition, at the
+protocol level -- though D-042 (below) shows composition still contributes a real,
+non-negligible share of the *reported worst-client movement*, which is a distinct
+question from whether the model itself changes at all.
+
+---
+
+## D-042 · 2026-08-20 — Composition-vs-training decomposition: dominant for LR, minor for MLP, VQC pending
+
+**What:** Decomposed observed worst-client decline (alpha=100->0.1) into a
+composition-only component (fixed alpha=100-trained model, evaluated against every
+condition's test-slice composition) and a residual training component, for LR and MLP
+(`scripts/composition_decomposition.py`, full 10-seed x 5-fold protocol, federated
+training via FedAvg matching the real Arm 2 protocol exactly).
+
+| model | observed decline | composition-only decline | % of movement that is composition | residual (training effect) |
+|---|---|---|---|---|
+| LR | 4.66pp | 3.82pp | **82.0%** | 0.84pp |
+| MLP | 18.46pp | 4.99pp | 27.0% | 13.47pp |
+
+**This materially changes how LR's result should be read.** D-028/D-034 reported LR's
+worst-client decline (4.66pp) as evidence the heterogeneity penalty is real but
+invisible in global accuracy. That's still true of the *global* flatness finding, but
+the worst-client decline itself is now shown to be **82% evaluation-slice composition,
+not training heterogeneity** -- LR's model barely changes with alpha (consistent with
+its convexity), and most of what looked like "LR degrades a little" is actually "the
+same LR model, scored against increasingly skewed held-out slices, naturally produces
+a lower minimum by chance of which slice is worst." MLP's decline is mostly real
+(73% residual training effect) by contrast.
+
+**VQC decomposition running as of this entry** (50-replicate re-run at alpha=100 only,
+evaluated against all 5 conditions' slicing, `scripts/vqc_composition_worker.py` /
+`vqc_composition_orchestrator.py`) -- reproducibility of VQC training confirmed exactly
+before launching (seed=0/fold=0/alpha=100 retrained, bit-identical to
+`results/arm4_partial/100_0_0.json`). Result to follow in a subsequent entry.
+
+**Committed locally, not pushed, per instruction.**
+
+---
