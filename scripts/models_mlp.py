@@ -70,6 +70,51 @@ class MLPModel:
         return p
 
 
+class FedProxMLPModel(MLPModel):
+    """FedProx variant of MLPModel, for Arm 3. The proximal term lives
+    entirely in fit() -- no change to federated_loop.py or the
+    aggregator, per CLAUDE.md ("FedProx uses the same aggregation as
+    FedAvg -- the proximal term lives in the client's local fit, not in
+    the server") and per the interface contract (mu is a constructor
+    argument, not a new fit() parameter).
+
+    Anchor correctness: federated_loop.py calls set_params(global_params)
+    immediately before fit() on every round, for every client
+    (scripts/federated_loop.py lines 52-53, no code between the two
+    calls) -- verified before writing this class. That means fit()'s own
+    current parameters, snapshotted as its first action, ARE that round's
+    true global vector. No staleness, no interface change needed.
+
+    Adds mu * (theta - theta_global) to each parameter's gradient before
+    the update step -- the gradient of the standard FedProx proximal
+    penalty (mu/2) * ||theta - theta_global||^2 (Li et al., MLSys 2020).
+    """
+
+    def __init__(self, n_features: int, hidden: int = 2, lr: float = 0.5, seed: int = 0, mu: float = 0.05):
+        super().__init__(n_features, hidden, lr, seed)
+        self.mu = mu
+
+    def fit(self, X: np.ndarray, y: np.ndarray, epochs: int) -> None:
+        anchor_W1, anchor_b1 = self.W1.copy(), self.b1.copy()
+        anchor_W2, anchor_b2 = self.W2.copy(), self.b2
+        n = len(X)
+        for _ in range(epochs):
+            A1, p = self._forward(X)
+            dZ2 = p - y
+            dW2 = A1.T @ dZ2 / n + self.mu * (self.W2 - anchor_W2)
+            db2 = dZ2.mean() + self.mu * (self.b2 - anchor_b2)
+            dA1 = np.outer(dZ2, self.W2)
+            dZ1 = dA1 * (1 - A1**2)
+            dW1 = X.T @ dZ1 / n + self.mu * (self.W1 - anchor_W1)
+            db1 = dZ1.mean(axis=0) + self.mu * (self.b1 - anchor_b1)
+            self.W1 -= self.lr * dW1
+            self.b1 -= self.lr * db1
+            self.W2 -= self.lr * dW2
+            self.b2 -= self.lr * db2
+
+
 if __name__ == "__main__":
     m = MLPModel(6)
     print(f"param count: {len(m.get_params())}")
+    fp = FedProxMLPModel(6, mu=0.05)
+    print(f"FedProx param count: {len(fp.get_params())}")
