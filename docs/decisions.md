@@ -1517,3 +1517,60 @@ non-monotonic pattern that a cleaner-looking report might have been tempted to
 smooth over.
 
 ---
+
+## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
+
+**What:** Literature and source-code search on whether the FL literature identifies and
+separates the confound the decomposition analysis (D-044-D-052) found: because the same
+client assignment determines both training partition and test slices, a fixed model's
+worst-client accuracy can decline purely from evaluation-slice composition shifting with
+α, independent of any genuine training effect. Full detail, per-source confidence levels,
+and quoted code: `docs/reference/fl_evaluation_protocol_literature.md`.
+
+**Result, stated plainly:** we did not find a paper that decomposes this. Checked four
+sources directly, three at the source-code level (not just paper text):
+
+- **pFL-Bench** (arXiv:2206.03655) — a comprehensive personalized-FL benchmark, confirmed
+  (quoted) to use client-local train/test splitting with matching skew, with no evidence
+  of decomposing composition from training effect. The strongest single piece of evidence
+  this isn't already standard: a benchmark paper built specifically to standardize
+  personalized-FL evaluation does not raise this issue.
+- **q-FFL** (our own cited prior-art source for the disparity phenomenon, D-031/D-033) —
+  verified directly from `generate_synthetic.py`: their synthetic-dataset train/test split
+  happens *within* each device's own distribution, so their Table 10 numbers are
+  themselves potentially exposed to this exact confound, unaddressed. This doesn't undo
+  q-FFL as prior art for the disparity existing -- it means their numbers describe
+  *observed* disparity, not necessarily one decomposed the way ours now is.
+- **NIID-Bench** — verified directly from `utils.py`: uses a single shared/global test
+  set, never partitioned per party. Our confound structurally does not apply to them, and
+  this is also the mechanism behind D-032's finding that they never report per-client
+  accuracy at all -- a shared test set makes a "per-client accuracy" number meaningless to
+  compute in the first place.
+- **Ditto** — verified from `fedbase.py`'s `test()` method: evaluates each client against
+  its own local `test_data[u]`, not a shared set. Slightly lower confidence than q-FFL
+  (codebase lineage inference for the specific per-dataset split, not an independently
+  re-verified generation script), but the trainer-level mechanism is directly quoted, not
+  assumed.
+
+**Checked and rejected as already covering this:** the common personalized-vs-global
+accuracy distinction in the pFL literature. That axis is about *which model* is evaluated
+(personalized vs. shared); ours is about whether the *evaluation composition itself*
+shifts with heterogeneity for a fixed model. Different question, not a relabeling.
+
+**Consequence for the paper:** the decomposition (D-044-D-052) stands as this project's
+strongest candidate original contribution -- not because the disparity phenomenon is
+novel (it isn't, per D-031/D-033), but because separating composition from training
+effect, specifically, does not appear to be established practice, checked at reasonable
+effort across the closest four sources. Phrase as "we did not find," per instruction --
+this is a four-source-plus-general-search check, not an exhaustive review.
+
+**Numbering note:** this is the first `A-`-prefixed entry, per `P-001`'s new convention
+(per-person prefixes; all `D-*` numbers, including this project's own D-029 through
+D-033, are frozen as historical, not renumbered). Worth recording plainly: I should have
+started at `A-001` for my very first decision entry this session (`CLAUDE.md`'s
+per-person-prefix rule was already present when I onboarded), not continued the shared
+`D-*` counter. That oversight is what produced the actual D-029-033/D-029-047 collision
+`P-001` describes -- Prithvi had to renumber his own entries (D-029-047 -> D-034-052) to
+resolve it. Flagged here rather than left implicit.
+
+---

@@ -1021,3 +1021,45 @@ last compute for this project, per instruction. Pushing under the currently
 authenticated account (Ayuvi) as directed.
 
 ---
+
+## 2026-08-22 — Pulled Prithvi's full quantum + decomposition work; evaluation-protocol literature check (A-001)
+
+**Pulled main.** Arms 3, 4, 5 all complete; the composition-vs-training decomposition
+(D-044-D-052) revised the project's headline entirely: the VQC's observed 7.25pp
+worst-client decline is 117% evaluation-composition, residual -1.25pp (indistinguishable
+from zero) -- no measurable training-heterogeneity effect. LR: 82% composition, +0.84pp
+residual. MLP: 27% composition, +13.47pp residual, the only model with a real effect.
+
+**Numbering:** confirmed via `P-001` that Prithvi independently continued the shared
+`D-*` counter too (originally D-029-047, directly colliding with my D-029-033), and had
+to renumber his side to D-034-052 to resolve it. I should have started at `A-001` for my
+first entry this session -- the per-person-prefix rule was already in `CLAUDE.md` when I
+onboarded, this wasn't a new convention introduced today. Leaving my D-029-033 frozen as
+instructed (not renumbering), starting fresh at A-001.
+
+**Task 2, evaluation-protocol literature check (A-001):** did this with the same rigor as
+the fairness review -- checked actual source code, not just paper text, for q-FFL,
+NIID-Bench, and Ditto specifically, plus a general search and pFL-Bench as a fourth
+source. Result: **did not find a paper decomposing evaluation-composition from
+training-heterogeneity effect.** Directly verified from code: q-FFL's synthetic-data
+generator splits train/test *within* each device's own distribution (skewed device ->
+skewed test slice, on the same device) -- meaning q-FFL's own Table 10, our cited
+prior-art for the disparity phenomenon, is itself potentially exposed to the confound
+our decomposition addresses, unaddressed by them. NIID-Bench, by contrast, uses one
+shared test set for every party (verified from `utils.py`) -- the confound structurally
+cannot apply to them, which also explains (at the mechanism level) why they never report
+per-client accuracy at all (D-032). Ditto evaluates per-client on local test data too
+(verified from `fedbase.py`'s `test()`), slightly lower confidence than q-FFL since the
+specific per-dataset generation script wasn't independently re-checked the way q-FFL's
+was. pFL-Bench, a comprehensive personalized-FL benchmark, confirms client-local
+matching-skew splitting is standard practice and does not raise this issue -- the
+strongest single piece of evidence the decomposition isn't already established.
+
+**Genuinely surprising part:** that our own most important cited prior-art source
+(q-FFL's Table 10) turned out to be checkable at the source-code level, and turned out to
+likely share the exact confound we're now separating out. This strengthens rather than
+weakens the case for the decomposition being a real contribution -- it's not just novel
+relative to a gap in the literature, it may be revealing something about how an
+already-influential, highly-cited result should be read.
+
+---
