@@ -38,6 +38,27 @@ After every component built or choice made, append to:
 
 If a number cannot be traced to a row in `runs.csv`, it does not go in the paper.
 
+## Decision-ID convention — per-person prefixes, no exceptions
+
+Two people work in parallel on separate branches. A shared sequential `D-NNN` counter
+collided once already (2026-08-20 — both branches independently continued numbering
+from the same fork point with different content; resolved by renumbering one side,
+logged as P-001). **This must not happen again:**
+
+- All existing `D-*` numbers are frozen — historical, never renumbered, never reused,
+  never continued.
+- Every new decision entry uses a per-person prefix: **Prithvi's entries are `P-NNN`**,
+  **Ayuvi's entries are `A-NNN`**, each their own independent counter starting at 001.
+- When starting work, check the highest existing `P-` (or `A-`) number already in
+  `docs/decisions.md` for that person and continue from there — do not guess, do not
+  reuse a number, do not renumber someone else's already-committed entries.
+- Cite decisions by full ID (`D-018`, `P-003`, `A-002`) everywhere — paper prose,
+  commit messages, code comments — so a citation stays unambiguous regardless of
+  which branch or session produced it.
+
+This applies automatically, without being asked, in every session from both
+instances working on this project.
+
 ## Locked technical decisions — do not change without asking me
 
 | Item | Decision | Reason |

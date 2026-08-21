@@ -23,11 +23,21 @@ advantage for either approach. Built for a university capstone
   natural 4-site partition as a reference condition
 - Shared federated loop + interface contract (`docs/INTERFACE.md`, frozen,
   one additive amendment since — optional divergence tracking, D-027)
-- Arm 1 (centralized classical) and Arm 2 (classical + FedAvg), both with
-  a logistic-regression model and a small parameter-matched MLP
-- 5-fold stratified CV protocol (10 seeds), replacing the original single
-  train/test split — noise floor ~0.3–1.0pp, down from ~3.1pp
-- Resumable, crash-safe experiment logging to `results/runs.csv`
+- Arm 1 (centralized classical) and Arm 2 (classical + FedAvg): logistic
+  regression (convex reference) and a 17-parameter MLP (matched to the
+  VQC's 18 parameters, capacity + convexity comparator)
+- **Arm 4 (VQC + FedAvg): full sweep complete.** VQC trained properly
+  (sanity-checked before trusting any accuracy number) — see
+  `docs/arm4_report.md`.
+- **Arm 5 (VQC + circular-mean aggregation): full sweep complete.**
+  Circular-mean is statistically indistinguishable from FedAvg across the
+  whole sweep (identical to 4 decimals at α=100/1.0) — a real null result
+  for the D-007 ablation, see `docs/arm5_report.md`.
+- 5-fold stratified CV protocol (10 seeds), identical across all arms —
+  noise floor ~0.3–1.0pp, down from ~3.1pp
+- Resumable, crash-safe experiment logging, validated with a real
+  process-kill test (classical grid) and in production over two
+  unattended overnight runs (Arm 4: 8.97hr, Arm 5: 7.48hr, zero failures)
 - `scripts/plots.py`: worst-client accuracy, global accuracy, and client
   divergence vs. α figures (dpi=200), extensible to new arms by adding a
   source file path, degrades gracefully when an arm's results file doesn't
@@ -36,23 +46,58 @@ advantage for either approach. Built for a university capstone
   `docs/reference/fl_fairness_literature.md`) — establishes that the
   worst-client-vs-global-accuracy gap is a known phenomenon in the FL
   fairness literature, not a novel finding of this project
+- Worst-client movement decomposed into evaluation-composition and
+  training-effect components (D-044 onward) — see the revised headline
+  below
 
-**Validation status:** the original Arm 1/Arm 2 gates (D-024) mostly pass;
-the flat α-sweep on *global* accuracy was investigated in a dedicated
-diagnostic session and found to be real but incomplete, not a bug — see
-`docs/diagnostic_report.md`. **Worst-client accuracy declines
-monotonically with α for both models, and client parameter divergence
-rises monotonically with α for both models** — the heterogeneity penalty
-this project measures is present, it just doesn't show up in a pooled
-global-accuracy score. The natural 4-site partition does not exceed the
-synthetic Dirichlet range on any metric (answers objective D-009).
+**Primary metric (D-034/D-035): worst-client accuracy, reported first.**
+Global accuracy is secondary. Rationale: global accuracy is flat across
+the entire α sweep for the convex reference and stays near-flat for the
+matched MLP except at the most extreme skew, while worst-client accuracy
+declines monotonically for every model tested (LR, MLP, VQC) — the
+heterogeneity penalty this project measures is a distributional effect on
+individual clients, largely invisible in a pooled global score.
 
-**Not started:** Arm 3 (FedProx), Arm 4 (VQC + FedAvg — the headline arm),
-Arm 5 (VQC + circular-mean aggregation, timeboxed). Per `docs/INTERFACE.md`,
-these should be addable without modifying the existing loop or aggregator.
-No decision yet on which accuracy metric (global vs. worst-client) is the
-headline metric going forward — that's an open interpretive call, not a
-technical blocker.
+**Headline comparison, revised after the composition-vs-training decomposition
+(D-044 onward):** the VQC's raw observed worst-client decline (7.25pp,
+α=100→0.1) originally looked intermediate between LR (4.66pp) and MLP
+(18.46pp). Decomposing it into evaluation-composition (a fixed model
+scored against increasingly skewed test slices) and a genuine training
+effect shows the opposite: **composition alone accounts for 117% of the
+VQC's observed decline — there is no measurable positive
+training-heterogeneity effect left (residual -1.25pp, not distinguishable
+from zero).** LR's residual is small but positive (+0.84pp, 82% is
+composition); MLP's is large and real (+13.47pp, only 27% composition).
+The VQC's residual is the smallest of the three, not intermediate. The
+VQC is non-convex yet behaves like the convex LR on this axis — flagged
+as an open question in `docs/arm4_report.md`, not resolved by speculation.
+Wall-clock cost is unaffected by this revision: ~13,300x the MLP's, per
+training run, on this simulator. Full numbers: `docs/arm4_report.md`.
+
+**Two follow-up checks that led to the revision above, both reported with
+their limitations rather than smoothed over:**
+- A capacity-matched (weakened) MLP was built to rule out the VQC's
+  original apparent robustness being a capacity artifact. The calibration
+  didn't generalize from its single-seed test to the full sweep, and the
+  weakened configuration turned out to make FedAvg training mathematically
+  partition-invariant (verified directly against the trained parameters)
+  — so that specific control doesn't cleanly answer the question. See
+  `docs/arm4_capacity_control_report.md`. The composition decomposition
+  above (a separate, later analysis) is what actually resolved it.
+- The D-041 circular-mean null result's explanation (angles never reach
+  the wraparound boundary) was checked directly against real trained
+  parameters, not just asserted — confirmed: max angle magnitude observed
+  is 1.35 radians short of π, with no trend toward the boundary as
+  heterogeneity increases. See `docs/arm5_angle_verification.md`.
+
+**Capacity scatter (originally planned as a parameter-count sweep over
+several MLP widths) was skipped (P-002):** its own pre-declared
+contingency fired — with composition explaining 117% of the VQC's
+decline, there is no substantial residual effect left to bracket.
+
+**Not started:** Arm 3 (FedProx) — in progress on a teammate's branch in
+parallel; this branch does not touch `federated_loop.py`, `data_loader.py`,
+`partitioner.py`, `docs/INTERFACE.md`, or any quantum file, by agreement.
 
 **Known open items:** decision IDs D-009–D-014 are referenced in project
 history but not recorded in `docs/decisions.md` — see
