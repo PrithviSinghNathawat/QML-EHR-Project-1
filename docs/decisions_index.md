@@ -84,3 +84,4 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | P-005 | 2026-08-22 | Arm 3 results: FedProx recovers 5-17% of MLP's residual damage, non-monotonically in mu |
 | A-001 | 2026-08-22 | Evaluation-composition confound: literature check -- largely unaddressed in the field (q-FFL's own Table 10 exposed too) |
 | A-002 | 2026-08-22 | plots.py completed against full Arm 1-5 results; composition-decomposition figure added (primary result) |
+| A-003 | 2026-08-22 | Natural-partition alpha via TV distance: 1.5 (CI 1.0-4.7) -- diverges from D-037's informal "~0.5-1.0", not yet reconciled |

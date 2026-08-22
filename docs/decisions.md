@@ -1626,3 +1626,42 @@ at this series count is workable but dense; flagged here rather than unilaterall
 redesigning a figure the instruction explicitly said to keep as-is.
 
 ---
+
+## A-003 · 2026-08-22 — Natural-partition alpha-calibration via total variation distance: 1.5 (95% CI 1.0-4.7), diverges from D-037's informal "~0.5-1.0"
+
+**What:** Prompted by drafting the paper's natural-partition calibration claim, which needed a
+value derived via a named formal distance metric rather than the informal comparison D-037
+used. Wrote `scripts/alpha_calibration.py` (new file): weighted total-variation distance
+between each client's local P(y=1) and the pooled P(y=1) (exact TV distance for a binary
+label, = client-size-weighted mean of |p_k - p_global|), computed for the natural partition
+(deterministic) and each Dirichlet alpha (mean/std across the same 10 seeds used everywhere
+else in this project). Equivalent alpha via log-linear interpolation between the two
+bracketing alpha conditions; 95% CI via percentile bootstrap (10,000 resamples of the
+10 seed-level TV values per bracketing condition).
+
+**Result:** natural partition TV distance = 0.1854. Dirichlet TV distances (mean, 10 seeds):
+alpha=100: 0.0273; alpha=1.0: 0.2018; alpha=0.5: 0.2693; alpha=0.1: 0.3690. Natural brackets
+between alpha=1.0 and alpha=100. Interpolated point estimate: **alpha ~ 1.54**. Bootstrap 95%
+CI: **[1.00, 4.69]**.
+
+**This diverges from D-037's "~alpha 0.5-1.0" language**, which is baked into every figure
+legend in `scripts/plots.py`, `docs/decisions.md` D-037 itself, and this project's other
+docs. Both can be simultaneously correct: D-037's comparison matched *downstream* metrics
+(worst-client accuracy, parameter divergence magnitude) between natural and synthetic
+conditions -- these reflect feature-distribution differences across real sites too, not just
+label skew. This entry's TV-distance computation isolates *label-distribution* skew only,
+which is all Dirichlet partitioning ever controls. Different question, can give a different
+number. **Not resolved here** -- flagged for reconciliation before the paper's natural-
+partition claim is finalized (which metric is "the" calibration number, stated explicitly,
+not left as two unreconciled "natural ~ alpha X" claims across the project).
+
+**Why total variation over Jensen-Shannon:** TV distance has an exact closed form for a
+two-point (binary-label) distribution (=|p_k-p_global|); JS divergence would require a log
+term and gives a different absolute scale without changing the qualitative
+monotonic-in-alpha ordering. Documented choice, not an arbitrary one.
+
+**CI width, reported honestly:** [1.00, 4.69] is wide, reflecting only 10 seeds and
+substantial seed-to-seed variance at alpha=1.0 specifically (std=0.1049 against a mean of
+0.2018, ~52% coefficient of variation). Not smoothed into a falsely precise-looking number.
+
+---

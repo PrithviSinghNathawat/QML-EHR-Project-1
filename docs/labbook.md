@@ -1100,3 +1100,59 @@ still legible, but dense. Flagged rather than redesigned, since redesigning wasn
 for and the instruction was explicit about keeping this pair as-is.
 
 ---
+
+## 2026-08-22 (continued) — Paper draft review: filled placeholders, found a real table error, one citation mismatch, one unverifiable framing claim, and one metric-choice discrepancy of our own
+
+**Given a full paper draft (`paper_draft_v1.md`) with `[[ ]]`-marked placeholders to fill.**
+Treated each placeholder as something to trace to real committed data, not something to fill
+from general knowledge, matching this project's own evidentiary rule. Went through the whole
+document, not just the marked placeholders, since asked to flag anything "missing,
+concerning, or straight up doesn't make sense."
+
+**Filled directly from existing repo data, no new analysis needed:**
+- Feature-retention threshold range (72.0-73.5%, confirmed exactly against D-021's
+  availability table -- `oldpeak` at 72.0% is the next-best excluded feature, `thalach`/
+  `exang` at 73.5% are the least-available retained ones).
+- Arm 3 (FedProx) results paragraph, from `docs/arm3_report.md` (already fully written up,
+  just needed condensing into prose for the paper).
+- Per-client test partition size table and smallest partition size (n=1 at alpha=0.1),
+  computed directly from `results/diagnostic_results.csv`'s `n` column.
+- Two missing citations (PerAda, CVPR 2024; pFL-Bench, NeurIPS 2022 Datasets & Benchmarks --
+  corrected from the informal arXiv-only citation used earlier this session).
+
+**New analysis required and done:** the natural-partition alpha-calibration placeholder
+specifically asked for a value "via total variation / Jensen-Shannon distance" -- more
+precise than anything already computed. No such analysis existed in committed code (D-037's
+"~alpha 0.5-1.0" was based on comparing downstream accuracy/divergence magnitudes, not a
+distance metric). Wrote `scripts/alpha_calibration.py`, computed TV distance properly
+(natural = 0.1854; brackets between alpha=1.0 and alpha=100), got **alpha ~ 1.5 (95% CI
+1.0-4.7)** -- genuinely different from the "~0.5-1.0" language baked into every figure legend
+and multiple decision entries across this whole project. Logged as A-003, flagged as
+unreconciled rather than silently picking whichever number sounded more consistent.
+
+**Verified, not just copied:** re-derived every number that appeared checkable against
+source data before trusting it. Found a real error this way: the paper's V-A table had VQC's
+observed/composition-only decline as 7.30pp/8.55pp; the actual source (D-049) and an
+independent re-derivation both give 7.25pp/8.50pp. The residual (-1.25pp) was identical
+either way, which is almost certainly why it went unnoticed -- the two errors canceled in the
+subtraction. Also verified the "28,800 trained parameter values" and "1.7927 radians" claims
+in SS V-C directly against `results/angle_capture/*.npz` (20 files x 20 rounds x 4 clients x
+18 params = 28,800 exactly; max magnitude 1.79269) -- both checked out precisely.
+
+**Found by reading the prose, not just checking numbers:** citation [13] (Wichmann et al.,
+COVID-19 mortality across 21 Brazilian hospitals) is cited alongside [14] (Asad et al.,
+genuinely about UCI Heart Disease) under the claim "classical federated learning on this
+dataset family has been reported previously" -- [13] is a different disease, different
+dataset, different country. Flagged rather than silently left in place. Also could not
+verify the Introduction's "four of six predictions contradicted" claim against the decision
+log -- found exactly one explicitly pre-registered prediction (D-048), and it was *confirmed*,
+not contradicted, per D-049. Flagged rather than guessed at a citation to make it disappear.
+
+**Genuinely surprising part:** that fixing the paper's own explicit request for a
+metric-based calibration number surfaced a real, unresolved internal inconsistency in this
+project's own accumulated documentation (two different "natural ~ alpha X" numbers, from two
+different legitimate metrics, never reconciled) -- not something the paper draft asked about
+directly, but something the act of trying to fill its placeholder honestly required
+confronting.
+
+---
