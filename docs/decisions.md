@@ -1555,5 +1555,150 @@ higher figure -- whether that framing needs revision is Prithvi's call.
 **Connects to established practice:** this shared-test protocol is exactly what
 NIID-Bench (D-032, cited [8] in `paper/02_related_work.md`) uses -- their Table III
 reports only pooled/global accuracy, never per-client.
+## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
+
+**What:** Literature and source-code search on whether the FL literature identifies and
+separates the confound the decomposition analysis (D-044-D-052) found: because the same
+client assignment determines both training partition and test slices, a fixed model's
+worst-client accuracy can decline purely from evaluation-slice composition shifting with
+α, independent of any genuine training effect. Full detail, per-source confidence levels,
+and quoted code: `docs/reference/fl_evaluation_protocol_literature.md`.
+
+**Result, stated plainly:** we did not find a paper that decomposes this. Checked four
+sources directly, three at the source-code level (not just paper text):
+
+- **pFL-Bench** (arXiv:2206.03655) — a comprehensive personalized-FL benchmark, confirmed
+  (quoted) to use client-local train/test splitting with matching skew, with no evidence
+  of decomposing composition from training effect. The strongest single piece of evidence
+  this isn't already standard: a benchmark paper built specifically to standardize
+  personalized-FL evaluation does not raise this issue.
+- **q-FFL** (our own cited prior-art source for the disparity phenomenon, D-031/D-033) —
+  verified directly from `generate_synthetic.py`: their synthetic-dataset train/test split
+  happens *within* each device's own distribution, so their Table 10 numbers are
+  themselves potentially exposed to this exact confound, unaddressed. This doesn't undo
+  q-FFL as prior art for the disparity existing -- it means their numbers describe
+  *observed* disparity, not necessarily one decomposed the way ours now is.
+- **NIID-Bench** — verified directly from `utils.py`: uses a single shared/global test
+  set, never partitioned per party. Our confound structurally does not apply to them, and
+  this is also the mechanism behind D-032's finding that they never report per-client
+  accuracy at all -- a shared test set makes a "per-client accuracy" number meaningless to
+  compute in the first place.
+- **Ditto** — verified from `fedbase.py`'s `test()` method: evaluates each client against
+  its own local `test_data[u]`, not a shared set. Slightly lower confidence than q-FFL
+  (codebase lineage inference for the specific per-dataset split, not an independently
+  re-verified generation script), but the trainer-level mechanism is directly quoted, not
+  assumed.
+
+**Checked and rejected as already covering this:** the common personalized-vs-global
+accuracy distinction in the pFL literature. That axis is about *which model* is evaluated
+(personalized vs. shared); ours is about whether the *evaluation composition itself*
+shifts with heterogeneity for a fixed model. Different question, not a relabeling.
+
+**Consequence for the paper:** the decomposition (D-044-D-052) stands as this project's
+strongest candidate original contribution -- not because the disparity phenomenon is
+novel (it isn't, per D-031/D-033), but because separating composition from training
+effect, specifically, does not appear to be established practice, checked at reasonable
+effort across the closest four sources. Phrase as "we did not find," per instruction --
+this is a four-source-plus-general-search check, not an exhaustive review.
+
+**Numbering note:** this is the first `A-`-prefixed entry, per `P-001`'s new convention
+(per-person prefixes; all `D-*` numbers, including this project's own D-029 through
+D-033, are frozen as historical, not renumbered). Worth recording plainly: I should have
+started at `A-001` for my very first decision entry this session (`CLAUDE.md`'s
+per-person-prefix rule was already present when I onboarded), not continued the shared
+`D-*` counter. That oversight is what produced the actual D-029-033/D-029-047 collision
+`P-001` describes -- Prithvi had to renumber his own entries (D-029-047 -> D-034-052) to
+resolve it. Flagged here rather than left implicit.
+
+---
+
+## A-002 · 2026-08-22 — plots.py completed against the full Arm 1-5 results; composition-decomposition figure added
+
+**What:** Extended `scripts/plots.py` (built in D-030) to the now-complete result set and
+added the primary decomposition figure per instruction. Two pieces:
+
+1. **Arms 3, 4, 5 wired in.** Added `results/arm3_diagnostic_results.csv`,
+   `arm4_diagnostic_results.csv`, `arm5_diagnostic_results.csv` (and their divergence
+   counterparts) to `RESULTS_SOURCES`/`DIVERGENCE_SOURCES`. Verified their schemas match
+   the original long-format columns exactly (`seed, fold, model, arm, condition, client,
+   n, accuracy, f1, auroc` / `..., round, mean_pairwise_l2`) before adding -- no other code
+   change was needed, confirming the extensibility design from D-030 actually holds up
+   against real new arms, not just the hypothetical missing-file test done at the time.
+
+2. **New script `scripts/composition_summary.py`** (does not edit any of Prithvi's
+   existing decomposition scripts) consolidates the composition-vs-training decomposition
+   (D-044-D-052) into `results/composition_decomposition_summary.csv`, so the numbers in
+   `docs/arm4_report.md`'s headline table have a reproducible data source instead of only
+   existing in that markdown table and one-off interactive runs. Reuses
+   `composition_decomposition.composition_only_curve()` (imported, not reimplemented) to
+   re-derive LR/MLP's composition-only curve (real federated training at alpha=100 only,
+   ~9 seconds total, cheap) and aggregates the already-computed VQC per-replicate JSONs in
+   `results/vqc_composition_partial/` (no training, just reading 50 existing files).
+   **Verified the re-derived numbers against the already-reported ones before trusting
+   them:** LR 4.666pp/3.825pp, MLP 18.462pp/4.998pp, VQC 7.251pp/8.493pp (observed/
+   composition-only decline, alpha=100->0.1) -- match D-047/D-049's 4.66/3.82, 18.46/4.99,
+   7.25/8.50 respectively (LR/MLP have tiny floating-point-scale differences from
+   independent re-training; VQC matches to within rounding since it reads the same static
+   files).
+
+**New figure: `results/figs/composition_decomposition.png`.** Grouped bar chart, one
+group per model (LR, MLP, VQC), three bars per group (observed decline, composition-only
+decline, residual/training effect), in percentage points. Chosen over a line/scatter
+design because the comparison is inherently three discrete numbers per model, and the
+report's own headline table (`docs/arm4_report.md`) already uses exactly this
+structure -- the figure should mirror the table it's illustrating, not invent a different
+shape for the same comparison. VQC's residual bar visibly crosses zero (negative),
+matching the "no measurable training-heterogeneity effect" finding directly.
+
+**Title correction:** the worst-client figure's title previously read "(primary result)"
+-- stale as of this task, since the decomposition figure is now the primary result per
+instruction. Retitled to "(observed, pre-decomposition)" to make the relationship
+explicit rather than leaving two figures both implicitly claiming to be primary.
+
+**Not changed:** the worst-client/global-accuracy figure pair's design itself (matched
+axes, natural-partition reference lines in the legend, shared color mapping) -- kept as
+originally planned, per instruction, despite now carrying 9 series each (arm1 LR/MLP,
+arm2 LR/MLP, arm3's three FedProx mu variants, arm4 VQC, arm5 VQC-circmean). Legibility
+at this series count is workable but dense; flagged here rather than unilaterally
+redesigning a figure the instruction explicitly said to keep as-is.
+
+---
+
+## A-003 · 2026-08-22 — Natural-partition alpha-calibration via total variation distance: 1.5 (95% CI 1.0-4.7), diverges from D-037's informal "~0.5-1.0"
+
+**What:** Prompted by drafting the paper's natural-partition calibration claim, which needed a
+value derived via a named formal distance metric rather than the informal comparison D-037
+used. Wrote `scripts/alpha_calibration.py` (new file): weighted total-variation distance
+between each client's local P(y=1) and the pooled P(y=1) (exact TV distance for a binary
+label, = client-size-weighted mean of |p_k - p_global|), computed for the natural partition
+(deterministic) and each Dirichlet alpha (mean/std across the same 10 seeds used everywhere
+else in this project). Equivalent alpha via log-linear interpolation between the two
+bracketing alpha conditions; 95% CI via percentile bootstrap (10,000 resamples of the
+10 seed-level TV values per bracketing condition).
+
+**Result:** natural partition TV distance = 0.1854. Dirichlet TV distances (mean, 10 seeds):
+alpha=100: 0.0273; alpha=1.0: 0.2018; alpha=0.5: 0.2693; alpha=0.1: 0.3690. Natural brackets
+between alpha=1.0 and alpha=100. Interpolated point estimate: **alpha ~ 1.54**. Bootstrap 95%
+CI: **[1.00, 4.69]**.
+
+**This diverges from D-037's "~alpha 0.5-1.0" language**, which is baked into every figure
+legend in `scripts/plots.py`, `docs/decisions.md` D-037 itself, and this project's other
+docs. Both can be simultaneously correct: D-037's comparison matched *downstream* metrics
+(worst-client accuracy, parameter divergence magnitude) between natural and synthetic
+conditions -- these reflect feature-distribution differences across real sites too, not just
+label skew. This entry's TV-distance computation isolates *label-distribution* skew only,
+which is all Dirichlet partitioning ever controls. Different question, can give a different
+number. **Not resolved here** -- flagged for reconciliation before the paper's natural-
+partition claim is finalized (which metric is "the" calibration number, stated explicitly,
+not left as two unreconciled "natural ~ alpha X" claims across the project).
+
+**Why total variation over Jensen-Shannon:** TV distance has an exact closed form for a
+two-point (binary-label) distribution (=|p_k-p_global|); JS divergence would require a log
+term and gives a different absolute scale without changing the qualitative
+monotonic-in-alpha ordering. Documented choice, not an arbitrary one.
+
+**CI width, reported honestly:** [1.00, 4.69] is wide, reflecting only 10 seeds and
+substantial seed-to-seed variance at alpha=1.0 specifically (std=0.1049 against a mean of
+0.2018, ~52% coefficient of variation). Not smoothed into a falsely precise-looking number.
 
 ---

@@ -1056,5 +1056,137 @@ left for the Results write-up.
 
 Logged as P-006. Full writeup: `docs/shared_test_validation.md`. No other experiment
 started, per instruction -- waiting to hear back before anything else runs.
+## 2026-08-22 — Pulled Prithvi's full quantum + decomposition work; evaluation-protocol literature check (A-001)
+
+**Pulled main.** Arms 3, 4, 5 all complete; the composition-vs-training decomposition
+(D-044-D-052) revised the project's headline entirely: the VQC's observed 7.25pp
+worst-client decline is 117% evaluation-composition, residual -1.25pp (indistinguishable
+from zero) -- no measurable training-heterogeneity effect. LR: 82% composition, +0.84pp
+residual. MLP: 27% composition, +13.47pp residual, the only model with a real effect.
+
+**Numbering:** confirmed via `P-001` that Prithvi independently continued the shared
+`D-*` counter too (originally D-029-047, directly colliding with my D-029-033), and had
+to renumber his side to D-034-052 to resolve it. I should have started at `A-001` for my
+first entry this session -- the per-person-prefix rule was already in `CLAUDE.md` when I
+onboarded, this wasn't a new convention introduced today. Leaving my D-029-033 frozen as
+instructed (not renumbering), starting fresh at A-001.
+
+**Task 2, evaluation-protocol literature check (A-001):** did this with the same rigor as
+the fairness review -- checked actual source code, not just paper text, for q-FFL,
+NIID-Bench, and Ditto specifically, plus a general search and pFL-Bench as a fourth
+source. Result: **did not find a paper decomposing evaluation-composition from
+training-heterogeneity effect.** Directly verified from code: q-FFL's synthetic-data
+generator splits train/test *within* each device's own distribution (skewed device ->
+skewed test slice, on the same device) -- meaning q-FFL's own Table 10, our cited
+prior-art for the disparity phenomenon, is itself potentially exposed to the confound
+our decomposition addresses, unaddressed by them. NIID-Bench, by contrast, uses one
+shared test set for every party (verified from `utils.py`) -- the confound structurally
+cannot apply to them, which also explains (at the mechanism level) why they never report
+per-client accuracy at all (D-032). Ditto evaluates per-client on local test data too
+(verified from `fedbase.py`'s `test()`), slightly lower confidence than q-FFL since the
+specific per-dataset generation script wasn't independently re-checked the way q-FFL's
+was. pFL-Bench, a comprehensive personalized-FL benchmark, confirms client-local
+matching-skew splitting is standard practice and does not raise this issue -- the
+strongest single piece of evidence the decomposition isn't already established.
+
+**Genuinely surprising part:** that our own most important cited prior-art source
+(q-FFL's Table 10) turned out to be checkable at the source-code level, and turned out to
+likely share the exact confound we're now separating out. This strengthens rather than
+weakens the case for the decomposition being a real contribution -- it's not just novel
+relative to a gap in the literature, it may be revealing something about how an
+already-influential, highly-cited result should be read.
+
+---
+
+## 2026-08-22 (continued) — plots.py completed against Arms 1-5, decomposition figure built (A-002)
+
+**Extended plots.py's data sources** to Arm 3/4/5's diagnostic CSVs -- confirmed their
+schemas matched the original design exactly before wiring them in, no code changes
+needed beyond the source-path list. This is the first real test of the "add a new arm by
+adding one line" design from D-030, and it held up.
+
+**The composition-only decomposition numbers (LR 3.82pp, MLP 4.99pp, VQC 8.50pp) only
+existed as a markdown table and one-off interactive runs** -- no CSV backed them. Wrote
+`scripts/composition_summary.py` (new file, doesn't touch any of Prithvi's existing
+decomposition scripts) to regenerate them reproducibly: re-runs
+`composition_decomposition.composition_only_curve()` for LR/MLP (real federated training,
+alpha=100 only, ~9 seconds total -- cheap) and aggregates VQC's 50 already-computed
+per-replicate JSON files (no training). Checked the re-derived numbers against the
+already-reported ones before trusting the new CSV: matched to within floating-point/
+retraining noise on every model. Saved to
+`results/composition_decomposition_summary.csv`.
+
+**Built the primary figure**, `composition_decomposition.png`: a grouped bar chart,
+observed/composition-only/residual per model, mirroring the exact structure of
+`docs/arm4_report.md`'s headline table rather than inventing a new visual shape for the
+same three numbers. VQC's residual bar visibly crosses zero, which is the whole point --
+seeing it cross zero on a bar chart lands the "no measurable training effect" finding
+more directly than reading -1.25pp off a table.
+
+**Caught and fixed one stale detail by re-inspecting the actual output image, not just
+checking the script ran:** the worst-client figure's title still said "(primary result)"
+from before the decomposition existed. Two figures both implicitly claiming to be
+primary would be confusing -- retitled to "(observed, pre-decomposition)".
+
+**Not touched:** the worst-client/global-accuracy figure pair's underlying design, per
+instruction to keep it as originally planned. It now carries 9 series each (up from 4) --
+still legible, but dense. Flagged rather than redesigned, since redesigning wasn't asked
+for and the instruction was explicit about keeping this pair as-is.
+
+---
+
+## 2026-08-22 (continued) — Paper draft review: filled placeholders, found a real table error, one citation mismatch, one unverifiable framing claim, and one metric-choice discrepancy of our own
+
+**Given a full paper draft (`paper_draft_v1.md`) with `[[ ]]`-marked placeholders to fill.**
+Treated each placeholder as something to trace to real committed data, not something to fill
+from general knowledge, matching this project's own evidentiary rule. Went through the whole
+document, not just the marked placeholders, since asked to flag anything "missing,
+concerning, or straight up doesn't make sense."
+
+**Filled directly from existing repo data, no new analysis needed:**
+- Feature-retention threshold range (72.0-73.5%, confirmed exactly against D-021's
+  availability table -- `oldpeak` at 72.0% is the next-best excluded feature, `thalach`/
+  `exang` at 73.5% are the least-available retained ones).
+- Arm 3 (FedProx) results paragraph, from `docs/arm3_report.md` (already fully written up,
+  just needed condensing into prose for the paper).
+- Per-client test partition size table and smallest partition size (n=1 at alpha=0.1),
+  computed directly from `results/diagnostic_results.csv`'s `n` column.
+- Two missing citations (PerAda, CVPR 2024; pFL-Bench, NeurIPS 2022 Datasets & Benchmarks --
+  corrected from the informal arXiv-only citation used earlier this session).
+
+**New analysis required and done:** the natural-partition alpha-calibration placeholder
+specifically asked for a value "via total variation / Jensen-Shannon distance" -- more
+precise than anything already computed. No such analysis existed in committed code (D-037's
+"~alpha 0.5-1.0" was based on comparing downstream accuracy/divergence magnitudes, not a
+distance metric). Wrote `scripts/alpha_calibration.py`, computed TV distance properly
+(natural = 0.1854; brackets between alpha=1.0 and alpha=100), got **alpha ~ 1.5 (95% CI
+1.0-4.7)** -- genuinely different from the "~0.5-1.0" language baked into every figure legend
+and multiple decision entries across this whole project. Logged as A-003, flagged as
+unreconciled rather than silently picking whichever number sounded more consistent.
+
+**Verified, not just copied:** re-derived every number that appeared checkable against
+source data before trusting it. Found a real error this way: the paper's V-A table had VQC's
+observed/composition-only decline as 7.30pp/8.55pp; the actual source (D-049) and an
+independent re-derivation both give 7.25pp/8.50pp. The residual (-1.25pp) was identical
+either way, which is almost certainly why it went unnoticed -- the two errors canceled in the
+subtraction. Also verified the "28,800 trained parameter values" and "1.7927 radians" claims
+in SS V-C directly against `results/angle_capture/*.npz` (20 files x 20 rounds x 4 clients x
+18 params = 28,800 exactly; max magnitude 1.79269) -- both checked out precisely.
+
+**Found by reading the prose, not just checking numbers:** citation [13] (Wichmann et al.,
+COVID-19 mortality across 21 Brazilian hospitals) is cited alongside [14] (Asad et al.,
+genuinely about UCI Heart Disease) under the claim "classical federated learning on this
+dataset family has been reported previously" -- [13] is a different disease, different
+dataset, different country. Flagged rather than silently left in place. Also could not
+verify the Introduction's "four of six predictions contradicted" claim against the decision
+log -- found exactly one explicitly pre-registered prediction (D-048), and it was *confirmed*,
+not contradicted, per D-049. Flagged rather than guessed at a citation to make it disappear.
+
+**Genuinely surprising part:** that fixing the paper's own explicit request for a
+metric-based calibration number surfaced a real, unresolved internal inconsistency in this
+project's own accumulated documentation (two different "natural ~ alpha X" numbers, from two
+different legitimate metrics, never reconciled) -- not something the paper draft asked about
+directly, but something the act of trying to fill its placeholder honestly required
+confronting.
 
 ---

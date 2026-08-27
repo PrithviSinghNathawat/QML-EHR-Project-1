@@ -1,7 +1,9 @@
 # 2. Related Work
 
 Full literature detail and verification notes behind every claim in this
-section: `docs/reference/fl_fairness_literature.md`.
+section: `docs/reference/fl_fairness_literature.md` (fairness/disparity
+precedent) and `docs/reference/fl_evaluation_protocol_literature.md`
+(evaluation-composition confound, Section 2.6).
 
 ## 2.1 Federated learning under heterogeneity: FedAvg, FedProx
 
@@ -51,6 +53,27 @@ contribute, against this precedent, is specifically the flatness of the
 global metric in a convex model, and the breakdown of that flatness in a
 non-convex one, on a new data modality (EHR tabular data) that this literature
 does not address.**
+
+**This precedent requires one further qualification, found after this
+section was first drafted.** Decomposing our own observed worst-client
+decline into an evaluation-composition component (a fixed model, trained
+once, scored against increasingly skewed per-client test slices as α falls)
+and a genuine training-heterogeneity component (`docs/decisions.md`,
+D-044–D-052) shows that **for two of our three model families, most or all
+of the apparent penalty is composition, not a training effect**: logistic
+regression's is 82.0% composition (residual +0.84pp, small but real); the
+VQC's is 117.2% composition (residual −1.25pp, not distinguishable from
+zero — no measurable training-heterogeneity effect survives decomposition).
+Only the MLP shows a substantial genuine training-heterogeneity residual
+(27.0% composition, residual +13.47pp). **We cannot claim to cleanly
+reproduce q-FFL's disparity as a training-heterogeneity effect across all
+three of our model families — for logistic regression and the VQC, what
+looks like worst-client degradation is largely an artifact of which rows
+happen to compose the worst client's test slice at a given α, not the model
+training differently under it.** The MLP is the one family where our result
+is a genuine reproduction of a real heterogeneity-driven decline, not a
+composition artifact. Section 2.6 addresses whether this composition
+confound itself is prior art.
 
 Li et al. [5] (Ditto) propose a distinct response to the same underlying
 disparity problem: rather than reweighting the server-side objective toward
@@ -114,27 +137,70 @@ been added or verified. This subsection needs Prithvi's quantum-side
 literature (or a fresh, independently verified search) before it can be
 written — left marked rather than filled with unverified citations.]*
 
-## 2.6 Research gap: calibrating synthetic heterogeneity against real institutional heterogeneity
+## 2.6 Research gaps: the evaluation-composition confound, α-calibration, and cost
 
-The federated learning literature that uses Dirichlet-α (or similar)
-synthetic partitioning — including the foundational method paper itself [9]
-and the characterization study closest to our own goals [8] — does not, as
-far as we have found, calibrate that synthetic severity scale against a real,
-naturally-occurring institutional partition on the same dataset. We checked
-two of the closest candidates directly: a federated learning study across
-real educational institutions uses Dirichlet-parameterized partitions to
-*simulate* institutional heterogeneity, rather than comparing real
-institutional splits against a synthetic scale; a federated EHR heterogeneity
-study across seven real hospitals (AKI/sepsis risk prediction) uses only real
-institutional splits, with no synthetic Dirichlet comparison at all. **We did
-not find a paper that places a real institutional partition on the same
-synthetic Dirichlet-α scale it is being compared against** — not a claim that
-no such paper exists, only that a reasonable-effort search did not surface
-one. This project's own natural-vs-Dirichlet comparison
+**The evaluation-composition confound appears to be the more significant of
+this project's contributions, and we did not find it addressed in the
+literature.** Every client-partitioned FL evaluation design shares a
+structural feature: when the same client assignment determines both training
+partition and test slices, a client's test data becomes more skewed as α
+falls exactly as its training data does — so a fixed model, retrained no
+further, can show a worst-client-accuracy trend purely from which rows
+compose the worst slice at a given α, independent of any genuine training
+effect. We checked whether this confound is identified or separated anywhere
+in the literature (`docs/reference/fl_evaluation_protocol_literature.md`,
+full detail). **We did not find a paper that decomposes it.** Client-local
+train/test splitting under matching skew is standard practice — confirmed
+directly, at the source-code level, for q-FFL [4] (`generate_synthetic.py`
+splits train/test *within* each device's own generated distribution) and
+Ditto [5] (`fedbase.py`'s `test()` evaluates each client against its own
+local test data), and confirmed in general by pFL-Bench, a comprehensive
+personalized-FL benchmark whose explicit design ("train/val/test splitting
+is conducted within the local data of each client") does not raise this
+issue as a concern. **This means q-FFL's own Appendix Table 10 — this
+project's primary cited precedent for the disparity phenomenon (Section
+2.2) — is itself built on a design exposed to exactly this confound, and is
+not, as far as we have found, decomposed.** NIID-Bench [8] is the one
+checked exception, and it is an exception by construction rather than by
+decomposition: verified directly from `utils.py` that it evaluates every
+party against a single shared test set, never partitioned per party — the
+confound cannot arise there, which is also the mechanism behind Section
+2.3's finding that NIID-Bench never reports per-client accuracy at all: a
+shared test set makes a per-client accuracy number meaningless to compute.
+We did not find a personalized-vs-global evaluation framing that already
+covers this either (checked and rejected, same reference file) — that
+distinction is about which model is evaluated, not whether the evaluation
+composition itself shifts with heterogeneity for a fixed model.
+
+Separately, the federated learning literature that uses Dirichlet-α (or
+similar) synthetic partitioning — including the foundational method paper
+itself [9] and the characterization study closest to our own goals [8] —
+does not, as far as we have found, calibrate that synthetic severity scale
+against a real, naturally-occurring institutional partition on the same
+dataset. We checked two of the closest candidates directly: a federated
+learning study across real educational institutions uses
+Dirichlet-parameterized partitions to *simulate* institutional
+heterogeneity, rather than comparing real institutional splits against a
+synthetic scale; a federated EHR heterogeneity study across seven real
+hospitals (AKI/sepsis risk prediction) uses only real institutional splits,
+with no synthetic Dirichlet comparison at all. **We did not find a paper
+that places a real institutional partition on the same synthetic
+Dirichlet-α scale it is being compared against** — not a claim that no such
+paper exists, only that a reasonable-effort search did not surface one.
+This project's own natural-vs-Dirichlet comparison
 (`docs/diagnostic_report.md`, Section 5) does exactly this calibration for
-the UCI Heart Disease dataset's four real sites, finding the natural partition
-sits mid-range on the synthetic scale (comparable to α≈0.5–1.0) rather than
-outside it.
+the UCI Heart Disease dataset's four real sites, finding the natural
+partition sits mid-range on the synthetic scale (comparable to α≈0.5–1.0)
+rather than outside it.
+
+Finally, this project measures a concrete wall-clock cost for its specific
+comparison: a 6-qubit VQC trained via PennyLane's `lightning.qubit` simulator
+with adjoint differentiation, against a parameter-matched classical MLP,
+under identical federated protocol. Arm 4's full sweep took ~13,318× the
+matched MLP's wall-clock per training run (`docs/arm4_report.md`). This is a
+simulator-only, CPU-only measurement, offered as documented cost rather than
+a claim of advantage in either direction — per this project's guardrail
+against ever presenting either model as demonstrating a quantum speedup.
 
 ## References
 
