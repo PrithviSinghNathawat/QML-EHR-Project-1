@@ -1603,6 +1603,121 @@ far. Whether Arm 3's framing (P-005) should be revised given this is Prithvi's c
 
 ---
 
+## P-008 · 2026-08-28 — Composition split recomputed under the shared-test training estimate; gap named as an unisolated model-partition interaction term
+
+**What:** Recomputed the composition/training split for all three model families
+using the shared-test training-effect estimate (P-006/P-007) in place of the
+decomposition's own residual, and compared both splits side by side. Inputs: D-047/
+D-049's observed decline and composition-only decline (fixed alpha=100-trained
+model scored against every condition's real, alpha-dependent Dirichlet slice
+composition); P-006/P-007's shared-test training-effect estimate (pooled decline
+and matched-statistic worst-group decline, both on the alpha-independent shared
+test set). `implied composition = observed decline − shared-test training effect`;
+`implied composition % = implied composition / observed decline`.
+
+| model | observed decline | decomposition composition-only (%) | decomposition residual (training effect) | shared-test training effect (pooled → worst-group) | implied composition under shared-test (%) | interaction (decomp residual − shared-test TE) |
+|---|---|---|---|---|---|---|
+| LR | 4.66pp | 3.82pp (**82.0%**) | +0.84pp | −0.26pp → −0.06pp | 4.72–4.92pp (**101–106%**) | +0.90 to +1.10pp |
+| MLP | 18.46pp | 4.99pp (**27.0%**) | +13.47pp | +4.62pp → +5.00pp | 13.46–13.84pp (**73–75%**) | +8.47 to +8.85pp |
+| VQC | 7.25pp | 8.50pp (**117.2%**) | −1.25pp | +0.35pp → −0.81pp | 6.90–8.06pp (**95–111%**) | −1.60 to −0.44pp |
+
+**Composition dominates for all three families under the shared-test estimate —
+stated plainly, since this is a stronger claim than previously reported.** Under the
+decomposition alone, only LR (82.0%) and VQC (117.2%) looked composition-dominated;
+MLP looked training-dominated (73% residual, 27% composition). Recomputed against
+the shared-test training-effect estimate instead, **all three land at ≥~73%
+composition** — LR ~101–106%, VQC ~95–111%, and MLP ~73–75%, inverting the
+previously-reported MLP split (27% composition / 73% training → ~74% composition /
+~26% training). This is consistent with the shared-test/decomposition agreement
+already established for LR and VQC in P-006 and now extended to MLP by this
+recomputation: composition, not training, is the larger driver of MLP's reported
+worst-client decline once the training effect is pinned down independently.
+
+**Framing the LR/VQC-vs-MLP discrepancy: not a failure of either method — the two
+methods agree wherever the shared-test training effect is near zero, and diverge
+only where a real training effect exists.** LR and VQC's interaction terms are small
+(+0.9 to +1.1pp, and −0.4 to −1.6pp respectively) — both near the noise floor,
+consistent with P-006's "agree" verdict for both. MLP's interaction term is
+substantial and one-directional: **+8.47 to +8.85pp, roughly 8.5pp**, exactly the
+scale flagged as a prediction before this recomputation. This pattern — agreement
+when the training effect is ~0, divergence proportional to the training effect's
+size — is what a **model-partition interaction term** absorbed into the
+decomposition residual would look like: the decomposition's "composition-only" arm
+is scored against the real, alpha-*dependent* Dirichlet partition (P-007's revised
+account), so wherever a model's parameters genuinely shift with training, that shift
+interacts with the same widening, uneven partition the composition-only arm also
+uses — a term the decomposition's two-way split (composition vs. training) was never
+built to isolate, and which `docs/decisions.md`'s own methodology notes already flag
+as not isolated (see the "composition still contributes... which is a distinct
+question" framing preceding D-047).
+
+**No estimate declared correct.** Per instruction: MLP's genuine training effect is
+reported as the range **4.6pp to 13.5pp**, bounded below by the shared-test estimate
+and above by the decomposition residual, with the ~8.5pp gap between them named and
+measured as the model-partition interaction term rather than resolved to a single
+number. `docs/shared_test_validation.md` updated with this framing and the
+three-family composition-split table.
+
+---
+
+## P-009 · 2026-08-28 — Second dataset (Diabetes 130-US Hospitals), classical arms only: characterisation complete, no per-record hospital ID exists
+
+**Scope note first:** this project's own guardrails (`CLAUDE.md`) state "no extra
+datasets." That line was written when the project was scoped single-dataset;
+Prithvi has now explicitly directed, in-session, starting a second dataset for the
+final stretch (no second semester, in-progress at Review-2, results at the final
+review). Treated as the live instruction superseding the standing note, per
+`CLAUDE.md`'s own "do not change without asking me" — this *is* Prithvi asking.
+Logged here so the change of scope is traceable, not silently absorbed.
+
+**What:** Downloaded and characterised Diabetes 130-US Hospitals (UCI,
+`data2/SOURCE.md` for full provenance/citation/license — CC BY 4.0, same as
+dataset 1). Data acquisition and characterisation only, per instruction — no
+partitioning, no training. `scripts/dataset2_characterize.py`,
+`results/dataset2_characterization.json`, full report in
+`docs/dataset2_characterization.md`.
+
+**Headline finding, reported plainly because it changes the task's premise:
+there is no per-record hospital identifier in this dataset's public release.**
+All 50 columns were inspected directly. "130 US hospitals" (Strack et al. 2014)
+describes the source data warehouse (Cerner Health Facts), not an available
+partition key in the released file — verified against the source publication,
+not just inferred from a missing column. The closest categorical fields by
+cardinality (`discharge_disposition_id`: 26, `medical_specialty`: 72 but 49.08%
+missing, `admission_source_id`: 17) describe care pathway, not institution, and
+using any of them as a stand-in for "hospital" would misrepresent the data.
+
+**Other characterisation facts:**
+
+| | |
+|---|---|
+| record count | 101,766 encounters, 71,518 unique patients (29.7% repeat-patient encounters — new leakage class, no analog in dataset 1) |
+| features passing pooled ≥85%-present rule | 42 of 47 (dropped: `weight` 96.86% missing, `max_glu_serum` 94.75%, `A1Cresult` 83.28%, `medical_specialty` 49.08%, `payer_code` 39.56%) |
+| new pathology missingness alone misses | 15 of 23 medication columns are >99% one value; 2 (`examide`, `citoglipton`) are 100% one value (zero variance) |
+| target | `readmitted == "<30"` (binary early readmission), standard per the source paper; 11.16% positive — more imbalanced than dataset 1's target |
+| class balance per hospital | not computable — no hospital field exists |
+
+**Pipeline adaptation proposed (not implemented):** pooled ≥85% rule for
+missingness plus a new near-zero-variance floor (threshold not yet chosen) for
+the medication columns; Dirichlet(α) as the *only* client-construction method
+for dataset 2 (no natural-partition arm is possible here — not manufactured
+from a proxy field to preserve narrative symmetry with dataset 1);
+`scripts/partitioner.py` already supports arbitrary client count `K`, so K=130
+requires no new code.
+
+**Pre-registered prediction, logged before measuring:** if the minimum
+operator's sensitivity to partition spread (P-007/P-008's revised account of
+the MLP gap) is a generic property of minimum-over-many-groups rather than
+something specific to dataset 1's 4-client setup, then **130 Dirichlet clients
+should show a substantially larger composition-only share of the observed
+worst-client decline than 4-5 clients do, for the same model family and same
+α.** Not tested here — characterisation only. Full statement and the
+falsification condition in `docs/dataset2_characterization.md`.
+
+**Holding, per instruction — no second-dataset experiment run yet.**
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and

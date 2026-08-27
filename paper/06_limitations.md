@@ -11,3 +11,12 @@
   simulation on CPU, using `diff_method="adjoint"`, which is not available on real
   quantum hardware (adjoint differentiation needs the full statevector). Training-time
   comparisons in this paper do not predict real-hardware training cost.
+- **No per-record hospital identifier in the second dataset.** Diabetes 130-US
+  Hospitals is described by its source publication (Strack et al., 2014) as spanning
+  "130 US hospitals and integrated delivery networks," but the public release
+  (`data2/raw/diabetic_data.csv`, 50 columns) contains no hospital/facility ID field —
+  confirmed by inspecting every column, not assumed from documentation. "130 hospitals"
+  describes the underlying data warehouse, not an available per-encounter partition
+  key. Any client structure for this dataset is necessarily synthetic (Dirichlet), not
+  a real institutional partition, unlike the heart-disease dataset's 4 processed sites.
+  See `docs/dataset2_characterization.md` and P-009.
