@@ -82,3 +82,4 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | P-003 | 2026-08-22 | Arm 3 (FedProx) scoped to MLP only |
 | P-004 | 2026-08-22 | FedProx anchor: verified set_params-immediately-before-fit, no interface change needed |
 | P-005 | 2026-08-22 | Arm 3 results: FedProx recovers 5-17% of MLP's residual damage, non-monotonically in mu |
+| P-006 | 2026-08-22 | Shared-test validation: LR/VQC decomposition corroborated, MLP magnitude disputed 3x |

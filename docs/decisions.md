@@ -1517,3 +1517,43 @@ non-monotonic pattern that a cleaner-looking report might have been tempted to
 smooth over.
 
 ---
+
+## P-006 · 2026-08-22 — Shared-test validation: LR/VQC decomposition corroborated, MLP magnitude disputed 3x
+
+**What:** A second, independent estimate of the training effect per model (LR, MLP, VQC),
+using a pooled held-out test set that is constant across alpha (no per-client
+composition possible by construction), compared against the composition-decomposition
+residuals (D-044 onward). No retraining -- the shared/global-accuracy metric already
+computed for every arm turns out to already satisfy this protocol exactly
+(`scripts/cv_protocol.py:fit_transform_fold` takes no alpha argument; verified
+empirically bit-identical across repeated calls for the same seed/fold). Full writeup:
+`docs/shared_test_validation.md`.
+
+**Result:**
+
+| model | shared-test decline | composition residual | agreement |
+|---|---|---|---|
+| LR | -0.26pp (1.6 SE from zero) | +0.84pp | agree -- both ~zero |
+| VQC | +0.35pp (1.0 SE from zero) | -1.25pp | agree -- both ~zero |
+| MLP | +4.62pp (4.4 SE from zero, real) | +13.47pp | **disagree materially, ~3x gap** |
+
+**LR and VQC corroborated cleanly** -- two independent methods, same conclusion (no
+real training effect). **MLP: both methods agree real damage exists, disagree on
+magnitude by ~3x.** Not adjusted to improve agreement, per instruction. One
+plausible (not verified, not resolved) account: the two methods estimate different
+statistics -- composition's residual is the training-driven change in *worst-client*
+accuracy specifically, shared-test is the training-driven change in *pooled/average*
+accuracy; if MLP's training damage concentrates on whichever client is worst-off
+rather than spreading evenly, a larger worst-client effect than pooled effect is what
+that would look like, not necessarily an error in either method.
+
+**Consequence, left for the Results write-up, not decided here:** MLP's true residual
+training effect is somewhere between the two estimates (+4.6pp to +13.5pp), not a
+single confirmed +13.47pp. Arm 3's FedProx results (P-005) were framed against the
+higher figure -- whether that framing needs revision is Prithvi's call.
+
+**Connects to established practice:** this shared-test protocol is exactly what
+NIID-Bench (D-032, cited [8] in `paper/02_related_work.md`) uses -- their Table III
+reports only pooled/global accuracy, never per-client.
+
+---

@@ -1021,3 +1021,40 @@ last compute for this project, per instruction. Pushing under the currently
 authenticated account (Ayuvi) as directed.
 
 ---
+
+## 2026-08-22 — Validation gate: a second, independent estimate of the training effect
+
+Prithvi wanted this before writing Results, since it's cheap and could change the
+paper's framing. Realized quickly that it might not need any new compute at all: the
+"global accuracy" metric already computed for every arm is evaluated on a test set
+that's a pure function of (seed, fold), never of alpha
+(`scripts/cv_protocol.py:fit_transform_fold` doesn't take a condition argument).
+Didn't just trust the function signature -- called it three times for the same
+seed/fold and confirmed bit-identical X_test/y_test each time before treating this as
+a free validation.
+
+**Result:** LR and VQC corroborate cleanly -- both the composition-decomposition
+residual and this shared-test estimate land on "no real training effect" for both
+models (composition: LR +0.84pp, VQC -1.25pp; shared-test: LR -0.26pp at 1.6 SE from
+zero, VQC +0.35pp at 1.0 SE from zero). Two independently-derived numbers, same
+conclusion, for two of the three models.
+
+**MLP doesn't corroborate as cleanly.** Both methods agree real training damage
+exists (shared-test's +4.62pp is 4.4 SE from zero, not noise) but disagree on how
+much by roughly 3x (composition: +13.47pp, shared-test: +4.62pp). Did not adjust
+anything to close the gap. Offered one plausible account (the two methods may be
+estimating different statistics -- worst-client-specific training effect vs.
+pooled-average training effect, and MLP's damage may concentrate on the worst-off
+client rather than spread evenly) but explicitly did not treat that as resolving the
+discrepancy -- flagged it for Prithvi's judgment instead, per the instruction not to
+paper over a material disagreement.
+
+**Consequence flagged, not decided:** Arm 3's FedProx report (P-005) was framed
+against the +13.47pp figure. The honest range given both estimates is +4.6pp to
++13.5pp -- whether that changes how Arm 3's "recovers 5-17%" framing should read is
+left for the Results write-up.
+
+Logged as P-006. Full writeup: `docs/shared_test_validation.md`. No other experiment
+started, per instruction -- waiting to hear back before anything else runs.
+
+---
