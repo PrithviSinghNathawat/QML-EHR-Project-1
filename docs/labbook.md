@@ -1190,3 +1190,41 @@ directly, but something the act of trying to fill its placeholder honestly requi
 confronting.
 
 ---
+
+## 2026-08-22 — Testing the mean-vs-minimum hypothesis for the MLP gap: rejected
+
+Prithvi's read on P-006's MLP discrepancy: pooled accuracy is a mean, the
+decomposition residual is about a minimum-over-clients statistic, and a model can
+degrade modestly on average while degrading a lot at its worst client -- that's the
+fairness phenomenon, not necessarily an inconsistency. Asked for a matched-statistic
+check: a fixed (alpha-independent) 4-way partition of the shared test set, worst
+group taken as the minimum, same partition reused across alpha=100 and alpha=0.1 so
+any decline is training-driven, not composition.
+
+Flagged one thing before running: VQC doesn't have full trained-model weights saved
+from the 50-replicate sweep, only a small n=2 sample from the earlier angle-capture
+work. A full n=50 VQC re-evaluation would mean retraining ~100 replicates (~14
+hours) -- not what "cheap" and "no retraining required" were describing. Used the
+existing n=2 sample for VQC instead of silently either skipping it or launching an
+unauthorized 14-hour job, clearly flagged as underpowered in the report.
+
+**Result: the hypothesis doesn't hold.** LR and MLP retrained deterministically
+(cheap, exact reproduction of the real models) and evaluated against the new fixed
+groups. MLP's worst-group decline: +5.00pp (SE 1.14pp, n=50) -- essentially
+identical to the pooled decline (+4.62pp), not closer to the decomposition residual
+(+13.47pp) at all. Switching the statistic from mean to minimum, while keeping the
+test partition alpha-independent, barely moved the number.
+
+**What this actually points to:** not minimum-vs-mean in general, but the
+decomposition's specific use of the alpha-*dependent* Dirichlet client partition
+(uneven group sizes, uneven class composition, especially severe at low alpha) for
+its composition-only comparison, versus this check's plain even random split. The
+composition residual's exposure to that specific structure -- not any minimum
+operator -- looks like the actual source of the gap. Logged as P-007, with the
+explicit instruction followed: didn't resolve the discrepancy, narrowed the
+candidate explanation and flagged that the decomposition's MLP residual needs an
+explicit caveat rather than being cited as a clean number.
+
+This was the last validation item before writing, per instruction. Holding here.
+
+---

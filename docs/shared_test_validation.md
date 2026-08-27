@@ -51,30 +51,63 @@ consistent with each other.
 *magnitude*: composition says +13.47pp, shared-test says +4.62pp — roughly a 3x
 gap, well outside what either method's own noise level would explain.
 
-## On the MLP discrepancy — reported, not resolved
+## Follow-up: is the MLP gap just a mean-vs-minimum statistic mismatch?
 
-**Not adjusted to improve agreement**, per instruction. One plausible account,
-offered as a consideration rather than a resolution: the two methods are not
-strictly estimating the same statistic. The composition residual is specifically
-the training-driven change in *worst-client* (minimum-subgroup) accuracy; the
-shared-test decline is the training-driven change in *pooled/average* accuracy
-across the whole fixed test set. If MLP's training-induced damage concentrates
-disproportionately on whichever client ends up worst-off, rather than spreading
-evenly across the population, a larger worst-client-training-effect than
-pooled-training-effect is what that would look like — not necessarily evidence one
-method is wrong. This has not been checked further and should not be read as
-settling the discrepancy; it is offered so the comparison isn't reported as an
-unexplained number with no candidate account, while still leaving the
-interpretation open.
+**Tested directly, 2026-08-22. It is not.** The candidate explanation above (pooled
+= a mean, composition residual = about a minimum, and minimums are more sensitive to
+spread) predicts that matching the *statistic* — taking a minimum on the same
+alpha-independent shared test set — should move the shared-test estimate toward the
+composition residual. It was tested by constructing a second, independent
+partition: a fixed, seeded, alpha-*independent* assignment of each fold's 184 test
+rows into 4 groups (not the Dirichlet client assignment — a plain random 4-way
+split, same seed formula reused for both the alpha=100 and alpha=0.1 evaluation of a
+given replicate, `scripts/shared_test_worst_group.py`), then took the minimum
+accuracy across those 4 fixed groups instead of the pooled mean. No retraining for
+LR/MLP (the exact already-existing trained models are deterministically reproduced
+and evaluated on the new partition); VQC used the smaller n=2 sample already saved
+from the earlier angle-capture work (full n=50 VQC retraining would cost ~14 hours
+and was not authorized here — flagged, not run).
+
+| model | shared-test **pooled** decline | shared-test **worst-group** decline | composition residual |
+|---|---|---|---|
+| LR | -0.26pp (SE 0.16pp) | -0.06pp (SE 0.37pp, n=50) | +0.84pp |
+| MLP | +4.62pp (SE 1.05pp) | **+5.00pp (SE 1.14pp, n=50, 4.4 SE from zero)** | **+13.47pp** |
+| VQC | +0.35pp (SE 0.34pp) | -0.81pp (n=2 only, not powered for a confidence claim) | -1.25pp |
+
+**For MLP, switching from a mean to a minimum statistic — while keeping the test
+partition alpha-independent — barely moved the number** (+4.62pp pooled vs. +5.00pp
+worst-group, well within each other's SE). It did **not** move toward the
+composition residual's +13.47pp. **The mean-vs-minimum hypothesis is rejected by
+this data.**
+
+## On the MLP discrepancy — reported, not resolved, narrowed by the follow-up
+
+**Not adjusted to improve agreement**, per instruction, in either check. The
+original candidate explanation (different statistics, mean vs. minimum) does not
+hold up once tested directly — the minimum operator itself is not what's driving
+the gap. What differs between the composition-decomposition's residual and *both*
+shared-test estimates (pooled and fixed-worst-group) is that the decomposition's
+residual is computed using the **alpha-dependent Dirichlet client partition** for
+its "composition-only" comparison — which, especially at low alpha, produces highly
+uneven client group sizes and class composition — while this validation's groups
+are a plain, evenly-random, alpha-independent 4-way split. Per the instruction's own
+fallback: **this points to the minimum operator's sensitivity to the *specific,
+widening, alpha-dependent* spread the Dirichlet partition produces (not to minimum
+vs. mean in general), and the composition-decomposition's residual for MLP needs an
+explicit caveat rather than being reported as one clean +13.47pp number.**
 
 **What this means for the paper's framing, left for Prithvi to decide:** MLP's
-composition-based residual (+13.47pp) is corroborated in *direction* and
-*significance* by an independent method, but not in *magnitude* — the honest
-range, given both estimates, is "somewhere between +4.6pp and +13.5pp of real
-training damage," not a single confirmed number. Arm 3's FedProx results
-(P-005, `docs/arm3_report.md`) were framed against the +13.47pp figure; whether
-that framing should be revised given this validation is a decision for the
-Results write-up, not made here.
+composition-based residual (+13.47pp) is corroborated in *direction* by two
+independent methods, but its *magnitude* is now doubly unconfirmed — neither the
+pooled (+4.62pp) nor the matched-minimum, alpha-independent-partition (+5.00pp)
+estimate comes close to it, and the mean-vs-minimum explanation for that gap has
+been tested and rejected. The most defensible reportable range narrows to roughly
++4.6pp to +5.0pp as the *validated* estimate, with +13.47pp reported as the
+decomposition's own figure alongside an explicit caveat that it does not corroborate
+under either independent check attempted so far. Arm 3's FedProx results (P-005,
+`docs/arm3_report.md`) were framed against the higher, uncorroborated figure — this
+narrows the case for revising that framing rather than settling it; not decided
+here.
 
 ## Connection to existing practice
 
