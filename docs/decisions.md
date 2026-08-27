@@ -1555,6 +1555,54 @@ higher figure -- whether that framing needs revision is Prithvi's call.
 **Connects to established practice:** this shared-test protocol is exactly what
 NIID-Bench (D-032, cited [8] in `paper/02_related_work.md`) uses -- their Table III
 reports only pooled/global accuracy, never per-client.
+
+---
+
+## P-007 · 2026-08-22 — Mean-vs-minimum hypothesis for the MLP gap tested and rejected
+
+**What:** Prithvi's hypothesis for P-006's MLP discrepancy: the composition residual
+and the shared-test pooled decline are different statistics (minimum-over-clients vs.
+mean), which need not agree even under a correct decomposition. Tested directly by
+constructing a second, independent, alpha-*independent* fixed partition of each
+fold's shared test set into 4 groups (plain seeded random split, same partition
+reused for both alpha=100 and alpha=0.1 evaluation of a given replicate --
+`scripts/shared_test_worst_group.py`), then taking the minimum accuracy across those
+fixed groups instead of the pooled mean. No retraining for LR/MLP (exact existing
+models reproduced deterministically); VQC used the smaller n=2 sample already saved
+from the angle-capture work (D-043) rather than a ~14-hour full retrain, which was
+not authorized and is flagged rather than run.
+
+**Result:**
+
+| model | shared-test pooled | shared-test worst-group (matched statistic) | composition residual |
+|---|---|---|---|
+| LR | -0.26pp | -0.06pp (SE 0.37pp, n=50) | +0.84pp |
+| MLP | +4.62pp | **+5.00pp (SE 1.14pp, n=50, 4.4 SE from zero)** | **+13.47pp** |
+| VQC | +0.35pp | -0.81pp (n=2 only) | -1.25pp |
+
+**Hypothesis rejected.** For MLP, switching the statistic from mean to minimum --
+while holding the test partition alpha-independent -- barely moved the number
+(+4.62pp -> +5.00pp, well within each other's SE). It did not move toward the
+composition residual's +13.47pp. The minimum operator itself is not what's driving
+the gap.
+
+**Revised account, per the instruction's own fallback:** what differs between the
+decomposition's residual and both shared-test estimates is that the decomposition's
+"composition-only" comparison uses the alpha-*dependent* Dirichlet client partition
+(highly uneven group sizes and class composition, especially at low alpha), not a
+plain even random split. This points to the minimum operator's sensitivity to the
+*specific, widening, alpha-dependent* spread the Dirichlet partition produces, not
+to minimum-vs-mean in general. **The composition-decomposition's MLP residual needs
+an explicit caveat, not a clean +13.47pp citation.**
+
+**Consequence for the paper's framing, not decided here:** the validated range for
+MLP's genuine training effect narrows to roughly +4.6pp to +5.0pp (two independent,
+mutually-consistent checks), with +13.47pp reported as the decomposition's own
+figure, explicitly caveated as uncorroborated by either independent check run so
+far. Whether Arm 3's framing (P-005) should be revised given this is Prithvi's call.
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and
