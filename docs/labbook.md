@@ -1228,3 +1228,95 @@ explicit caveat rather than being cited as a clean number.
 This was the last validation item before writing, per instruction. Holding here.
 
 ---
+
+## 2026-08-28 — Recomputing the composition split with the shared-test training estimate
+
+Asked to redo the composition/training split for all three models using the
+shared-test estimate instead of the decomposition's own residual, since if MLP's
+real training effect is 4.6-5.0pp rather than 13.47pp, composition should account
+for roughly 73% of its 18.46pp observed decline, not 27% -- an inversion of the
+originally-reported split.
+
+Pure arithmetic on numbers already logged (D-047/D-049 for observed and
+composition-only decline, P-006/P-007 for the shared-test training-effect
+estimate) -- no new experiment. `implied composition = observed decline -
+shared-test training effect`.
+
+Confirmed: LR ~101-106% composition (was 82.0%), MLP ~73-75% composition (was
+27.0%, this is the inversion), VQC ~95-111% composition (was 117.2%, already
+composition-dominated). **All three families land at >=~73% composition under
+the shared-test estimate.** That's a materially stronger claim than what's
+currently written anywhere in the paper drafts, so it's logged plainly rather
+than softened.
+
+The gap between the decomposition residual and the shared-test estimate, per
+model: LR +0.9 to +1.1pp, VQC -0.4 to -1.6pp (both small, both already called
+"agree" in P-006/P-007), MLP +8.47 to +8.85pp -- close to the ~8.5pp guessed
+before computing it. Named this gap a model-partition interaction term: the
+decomposition's composition-only arm is scored against the real alpha-dependent
+Dirichlet partition, so a model whose parameters genuinely move with training
+(MLP) picks up an interaction with that partition structure that the two-way
+composition/training split was never built to isolate -- this was actually
+flagged in the methodology notes before D-047 ever ran, just never quantified
+until now. VQC and LR barely move with training, so they don't show it.
+
+Didn't declare either number (4.6pp or 13.5pp) correct. Reported MLP's real
+training effect as a range, 4.6pp to 13.5pp, with the ~8.5pp interaction named
+as a measured limitation of the decomposition method, not a bug or a failure.
+Logged as P-008, docs/shared_test_validation.md updated with the three-family
+table.
+
+Then moved straight into second-dataset scoping (Diabetes 130-US Hospitals,
+classical arms, characterisation only) per the same instruction -- see P-009.
+
+---
+
+## 2026-08-28 — Second dataset: acquired and characterised, hit a real surprise
+
+Downloaded Diabetes 130-US Hospitals from UCI
+(archive.ics.uci.edu/static/public/296/...), unzipped to `data2/raw/`. 101,766
+rows, 50 columns. Wrote `scripts/dataset2_characterize.py` to compute record
+count, missingness, class balance, target framing -- same "if it's not
+traceable to a script it doesn't go in the paper" rule as everything else.
+
+**The surprise: this dataset does not have a hospital ID column.** Checked
+every one of the 50 columns by hand against the header -- no
+hospital/facility field anywhere. The task description said "130 real
+hospital identifiers," which turns out to describe the source data warehouse
+(Cerner Health Facts, per the Strack et al. 2014 paper this dataset comes
+from), not something available per encounter. Double-checked against the UCI
+page and the source paper before reporting this, since it contradicts the
+starting premise and didn't want to report a parsing mistake as a finding.
+It's real: no per-record site key exists in the public release.
+
+This kills the natural-partition plan for dataset 2 as originally framed --
+can't repeat the heart-disease dataset's 4-real-site comparison here at all.
+Proposed instead: Dirichlet-only client construction, run at K=130 directly
+(no real hospital key needed for that, `partitioner.py` already takes
+arbitrary K), and use the client-count jump itself (4 to 130) as the
+interesting variable, since it's a clean test of whether the P-007/P-008
+composition-confound mechanism (minimum operator sensitive to partition
+spread) is a generic property of "minimum over many groups" or specific to
+the small-N setup we've been running. Logged that as a pre-registered
+prediction before measuring anything, same pattern as D-048.
+
+Other things worth remembering: repeat patients are a new leakage risk here
+(29.7% of encounters are a patient's second-or-later visit -- heart disease
+never had this, one row per patient there). And missingness alone isn't
+enough to filter features this time -- 15 of 23 medication columns are >99%
+a single value, two of them (examide, citoglipton) are literally constant.
+Missingness rule from dataset 1 would keep those; they need a separate
+near-zero-variance check that didn't exist before because dataset 1 never
+needed it.
+
+Also logged the scope change itself: CLAUDE.md's guardrail list literally
+says "no extra datasets," written back when this was a single-dataset
+project. Treated Prithvi's explicit in-chat instruction to start a second
+dataset as the update mechanism CLAUDE.md itself describes ("do not change
+without asking me") -- this is that ask -- and noted it plainly in P-009
+rather than quietly overriding a written rule.
+
+Characterisation only, per instruction -- no partitioning, no training run.
+Holding before any second-dataset experiment.
+
+---
