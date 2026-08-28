@@ -91,6 +91,9 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | P-013 | 2026-08-28 | Balanced accuracy alone insufficient: both models constant classifiers everywhere; class-weighted training added, reverses part of P-011 |
 | P-014 | 2026-08-28 | Dataset 2 grid: client-count prediction confirmed (shared-test-implied share); decomposition does not generalize as a standalone method (LR now disagrees too) |
 | P-015 | 2026-08-28 | Paper reframed: contribution is the diagnostic pair, not the decomposition; consolidated cross-dataset table added (§V.F) |
+| P-016 | 2026-08-28 | Fine-grid, dual-statistic alpha calibration (TV+JS, mean+max, 25pt grid, 30 seeds) supersedes A-003; natural partition maps to alpha 1.0-1.7 |
+| P-017 | 2026-08-28 | Dataset 2 per-client test partition sizes, K=4 and K=130: worst cases n=2 (K=4) and zero-row cells (K=130) flagged in Limitations |
+| P-018 | 2026-08-28 | Placeholder audit of paper_draft_v2.md: 4 substantive [[ ]] items remain open (Flags 2/3/4/6), rest resolved or informational |
 | A-001 | 2026-08-22 | Evaluation-composition confound: literature check -- largely unaddressed in the field (q-FFL's own Table 10 exposed too) |
 | A-002 | 2026-08-22 | plots.py completed against full Arm 1-5 results; composition-decomposition figure added (primary result) |
 | A-003 | 2026-08-22 | Natural-partition alpha via TV distance: 1.5 (CI 1.0-4.7) -- diverges from D-037's informal "~0.5-1.0", not yet reconciled |

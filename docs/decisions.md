@@ -1979,6 +1979,121 @@ document itself does not yet.
 
 ---
 
+## P-016 · 2026-08-28 — Fine-grid, dual-statistic alpha calibration supersedes A-003's single-statistic estimate
+
+**What:** A-003's natural-partition calibration (α ≈ 1.5, 95% CI 1.0–4.7)
+used one statistic (TV distance, client-weighted mean only) on the
+project's existing 4-point α grid (100, 1.0, 0.5, 0.1) with 10 seeds,
+bracketed and log-linearly interpolated between only the two nearest
+tested conditions. Replaced with `scripts/alpha_calibration_fine.py`: a
+25-point log-spaced grid from α=0.05 to 100, 30 seeds per point, and two
+statistics (TV distance, Jensen-Shannon divergence base-2) each reported
+as both client-weighted mean and unweighted max across the four real
+clients. Figure at `results/figs/alpha_calibration_fine.png`
+(`scripts/plot_alpha_calibration_fine.py`).
+
+**Result:** all four statistics fall inside the tested grid's range (no
+"outside range, cannot map" case) and converge to a materially tighter
+range than A-003 (every new 95% CI has width ≤0.85 vs. A-003's 3.7):
+
+| statistic | equivalent α | 95% CI |
+|---|---|---|
+| TV distance, mean | 1.475 | [1.147, 1.961] |
+| TV distance, max | 0.991 | [0.812, 1.259] |
+| JS divergence, mean | 1.727 | [1.378, 2.180] |
+| JS divergence, max | 1.014 | [0.835, 1.270] |
+
+**Does not collapse to one number, reported as such per instruction:** the
+two mean-based statistics cluster near α≈1.5–1.7 (the natural partition's
+*typical* client); the two max-based statistics cluster near α≈1.0 (its
+*worst* client). Natural partition maps onto Dirichlet α **1.0–1.7**, not
+a single point — narrower than A-003's range but a range on principle.
+`paper_draft_v2.md` §V-D and Flag 1 updated; Flag 1's other open item
+(reconciling against D-037's separate "~0.5–1.0" downstream-metric
+comparison) remains unresolved, not in scope here.
+
+---
+
+## P-017 · 2026-08-28 — Per-client test partition sizes for dataset 2, K=4 and K=130
+
+**What:** `scripts/dataset2_partition_sizes.py` — same seeds (0-9), same
+`client_assignment`/`cv_folds` calls used to produce P-014's grid, so
+these sizes describe the exact partitions P-014's results were computed
+on. `results/dataset2_partition_sizes.json`.
+
+**Result:** mean is invariant within a client count (3575.9 at K=4; 110.0
+at K=130 — pooled test rows divided evenly on average), spread widens
+with heterogeneity as in dataset 1, and further with client count. K=4's
+worst case: **n=2** test rows at α=0.1. K=130 (the count used for the
+Section V.F headline result): **1 of 6,500 (seed,fold,client) cells has
+zero test rows**, at both α=1.0 and α=0.5 — correctly excluded from
+`worst_client_acc`'s minimum rather than scored as a failure (verified
+against the function directly), meaning the reported "worst client" in
+those replicates is a minimum over 129 clients, not literally 130.
+
+**Flagged prominently in Limitations per instruction, not left
+discoverable:** `paper_draft_v2.md` §V-E extended with the full table;
+§VII's "Sample size in the tail" bullet rewritten to state the K=130
+zero-row-cell finding explicitly and connect it to Section V.F's headline
+claim (the finding is real and measured on real partitions, but the
+per-replicate worst-client numbers feeding it are noisy at the tail).
+`paper/06_limitations.md` updated to match.
+
+---
+
+## P-018 · 2026-08-28 — Placeholder audit of paper_draft_v2.md: what remains unfilled before submission
+
+**What:** searched `paper_draft_v2.md` for every remaining `[[ ]]`
+marker (per instruction, before any further experiment). 14 matches.
+Categorized:
+
+**Genuinely open — need author action before submission:**
+1. §I closing sentence ("expected outcomes were largely refuted... six
+   predictions, four contradicted") — **Flag 2**. Only one prediction is
+   actually logged as pre-registered in `docs/decisions.md` (D-048), and
+   it was *confirmed*, not contradicted. The "six predictions" candidate
+   (`docs/diagnostic_report.md` §6) has 3 of 6 rows "not supported," not
+   4. Needs a citation to the actual six predictions and their outcomes,
+   or correction/removal.
+2. §II-E, citation [13] — **Flag 4**. Wichmann et al. is a COVID-19
+   mortality study across 21 Brazilian hospitals, not the UCI Heart
+   Disease archive; only [14] is actually about this dataset family. The
+   sentence claiming both citations are "this dataset family" needs
+   either dropping [13] or broadening the claim's scope explicitly.
+3. §II-E, [12] A2G-QFL description — **Flag 3**. Covers only the
+   geometric half of A2G-QFL's actual dual-gain (geometry + QoS/latency)
+   contribution. Not incorrect, incomplete — needs a clause acknowledging
+   the QoS half or an explicit statement that only the geometric half is
+   adopted (which is correct elsewhere in the draft).
+4. §VII, feature-exclusion sensitivity analysis — **Flag 6**. The
+   analysis itself (quantifying the cost of excluding `ca`/`thal`/`chol`)
+   genuinely does not exist in the repo (tracked as D-014, referenced
+   across sessions, never built). §VII already states this honestly as
+   an open limitation rather than a fake placeholder number — the
+   *documentation* gap is resolved, the *analysis* gap is not, and won't
+   close without new experimental work, which is out of scope per
+   "no further experiments" for this session.
+
+**Resolved this session, marker left as a review-trail note (harmless,
+can be stripped before final submission):** Flag 1 (§V-D, superseded by
+P-016 — one sub-item, the D-037 reconciliation, still open, see above),
+Flag 5 (§V-A VQC row, numerical correction), Flag 7 (§II-B rewrite),
+Flag 8 (§IV.A, §VII dataset-2 companion content), plus five purely
+informational sourcing notes (§V-D, §V-E ×2, §V.F, §VII) that document
+where a filled number came from rather than flag anything unfilled.
+
+**Not re-verified this pass (already checked and confirmed correct in an
+earlier pass, per the draft's own "Flags NOT raised" note):** the
+angle-capture parameter counts, the 13,300×/8.97-hour timing figures, and
+the LR/MLP rows of the original §V-A table.
+
+**Net: 4 substantive open items remain before submission**, all
+requiring either an author decision (Flags 2, 3, 4 — correct or narrow a
+claim) or new experimental work explicitly out of scope for this session
+(Flag 6). No `[[ ]]` marker was found undocumented or unaccounted for.
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and

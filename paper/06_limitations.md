@@ -45,3 +45,30 @@
   in addition to balanced accuracy at evaluation (P-011, P-013);
   dataset-1 numbers reported for comparison use the same weighting for
   consistency, alongside the original unweighted figures for traceability.
+- **Per-client test partitions get very small at the tail, worse on
+  dataset 2, worst at K=130.** Dataset 1's smallest observed test
+  partition at α=0.1 is n=1 (P-011 and earlier). Dataset 2 is worse at
+  both client counts tested (P-017): at K=4, α=0.1, the smallest test
+  partition is n=2; at K=130 — the client count behind the Section V.F
+  headline confound-scaling result — 1 of 6,500 (seed, fold, client)
+  cells has **zero** test rows, at both α=1.0 and α=0.5. Zero-row cells
+  are correctly excluded from the worst-client minimum rather than scored
+  (verified against `worst_client_acc` directly), so the reported "worst
+  client" in those replicates is a minimum over 129 clients, not 130. The
+  composition-share-grows-with-K finding is real, measured on real
+  partitions — but individual per-replicate worst-client numbers at this
+  regime should be read as noisy at the tail, not as precise per-client
+  measurements. See `results/dataset2_partition_sizes.json` and
+  `scripts/dataset2_partition_sizes.py`.
+- **Natural-partition α-equivalence is a range, not a point (P-016).**
+  Fine-grid calibration (TV distance and Jensen-Shannon divergence, both
+  client-weighted mean and cross-client max, 25-point α grid, 30 seeds
+  per point) narrows the earlier A-003 estimate (α≈1.5, CI 1.0–4.7) but
+  does not collapse it to one number: mean-based statistics center near
+  α≈1.5–1.7, max-based statistics (driven by the single most-skewed
+  client) center near α≈1.0. The natural partition maps onto Dirichlet
+  α in the range 1.0–1.7, depending on which statistic and which client
+  (typical or worst) is asked. Separately, this still does not reconcile
+  with `docs/decisions.md` D-037's informal "~0.5–1.0" comparison, which
+  measures a different quantity (downstream metric matching, not label-
+  distribution distance) — that reconciliation remains open.
