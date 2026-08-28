@@ -1401,3 +1401,32 @@ identical to a working one until checked directly. Logged as P-011, P-013,
 P-014. Holding now -- per instruction, the rest is writing.
 
 ---
+
+## 2026-08-28 (continued) — Paper reframed: the pair is the finding, not the decomposition
+
+P-014's result (LR itself disagreeing with shared-test on dataset 2, at 3
+of 5 configurations, sometimes with a negative residual against a real
+positive shared-test effect) meant the paper's actual contribution had
+changed. Asked to rewrite the Abstract, Contributions list, and Conclusion
+around "the diagnostic pair is the contribution, not the decomposition" --
+and to say plainly that the correction we set out to build turned out not
+to hold up under the conditions it was meant to diagnose, not softened.
+
+Did that, plus a new consolidated table (all 3 model families, both
+datasets, both estimators, both client counts -- 15 rows, with K=130's two
+alpha=0.1 cells shown as explicit "structurally infeasible" rows rather
+than left out). Client-count result now stated prominently rather than
+buried: MLP's shared-test-implied composition share goes 73-78% (K=4) to
+98-99% (K=130) -- the confound is worst exactly where most real federated
+studies actually operate (many clients), not a small-scale quirk of this
+project's 4-5 client setup.
+
+Left two things flagged rather than fixed, since they were out of scope
+for this pass too: Related Work (SSII-B) still says "two of three" (the
+Contributions list said the same thing but got rewritten anyway, so that
+one's fixed now; II-B wasn't touched by either pass) and the Dataset/
+Limitations sections still don't have a companion paragraph for the
+second dataset the way the new results section now assumes. Logged as
+P-015. Holding again -- writing only, from here.
+
+---
