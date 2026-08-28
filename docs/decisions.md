@@ -1718,6 +1718,216 @@ falsification condition in `docs/dataset2_characterization.md`.
 
 ---
 
+## P-010 · 2026-08-28 — Paper draft rewritten around the stronger "composition dominates all three" claim (P-008)
+
+**What:** Rewrote the Abstract, §V-A, and the Conclusion of the paper draft
+around P-008's finding. **Target-file note:** the instruction named
+`paper_draft_v1.md`; that file (in `~/Downloads`, not tracked in this repo)
+is the *pre-review* draft and still carries a known numerical error in its
+VQC row (7.30/8.55pp vs. the correct 7.25/8.50pp) that was already found and
+fixed in `paper_draft_v2.md` during the 2026-08-22 placeholder-review session
+(see labbook). Edited `paper_draft_v2.md` instead — editing v1 would silently
+reintroduce an already-corrected error — and flagged this substitution
+explicitly rather than picking silently.
+
+**Edits:** Abstract now states composition dominates all three model
+families (not two of three), reports the LR/VQC agreement and the MLP's
+4.6–13.5pp range with its ~8.5pp interaction term side by side, and does not
+pick a winner. §V-A's table gained three columns (shared-test training
+effect, implied composition under shared-test, interaction) alongside the
+original three; prose explicitly states neither estimate is declared
+correct. The Conclusion was rewritten to the same framing and recommends
+that studies report both a decomposition and a shared-test estimate where
+available, treating agreement as evidence of trustworthiness and
+disagreement as evidence of the interaction term rather than of either
+method being wrong.
+
+**Flagged, not fixed:** §I's Contribution 2 and §II-B still say "two of
+three" — out of the instructed scope (Abstract/§V-A/Conclusion only) and
+now inconsistent with the rest of the document. Added as Flag 7 in the
+draft's own "Flags for Author Review" section rather than silently edited
+or silently left.
+
+---
+
+## P-011 · 2026-08-28 — Evaluation metric for dataset 2: balanced accuracy, chosen before any dataset-2 result was seen, and applied retroactively to dataset 1 for a matched comparison
+
+**What happened:** Piloting dataset 2's federated LR/MLP grid (K=4, α=100
+vs. α=1.0, one seed) before committing to the full run, both models
+converged to "always predict not-readmitted" under plain 0.5-threshold
+accuracy — confirmed not an undertraining artifact by running LR to 2,000
+epochs of full-batch centralized gradient descent on the actual fold data:
+the model's own maximum predicted probability *fell* with more training
+(0.45 at 5 epochs → 0.18 at 2,000), moving further from the 0.5 threshold,
+which is the genuine converged optimum for this feature set at an 8.8%
+positive base rate, not a symptom of insufficient training. Under that
+degenerate classifier, worst-client accuracy at every α is driven entirely
+by each client's local class balance — the classifier itself never varies —
+which mechanically produces ~100% composition / ~0% training effect for
+every α pair tested. That is a property of the metric meeting a degenerate
+classifier, not a finding about composition vs. training generalizing to
+dataset 2, and reporting it as one would have been actively misleading.
+
+**Decision, made by Prithvi before any dataset-2 grid result was seen (the
+pilot above showed only that the metric was broken, not what any real
+result under a fixed metric would be):** switch to **balanced accuracy**
+(mean of per-class recall) in evaluation only — worst-client,
+composition-only, and both shared-test statistics (pooled and worst-group).
+Training is untouched: `models.py`/`models_mlp.py`'s `fit()` is not
+class-weighted, no interface change, no new capability beyond what dataset
+1 already has. This was Prithvi's call, not a default I picked — logged
+here specifically so the ordering (metric fixed *before* seeing dataset-2
+numbers, not adjusted after) is traceable, matching this project's own
+evidentiary culture around not tuning results to a preferred outcome.
+
+**Condition attached to the decision, also honored:** dataset 1's existing
+composition-decomposition and shared-test results (D-047, D-049, P-006,
+P-007) were computed under plain accuracy. Re-evaluating dataset 2 under a
+different metric than dataset 1 would make the cross-dataset
+methods-generalization claim (P-014) a comparison of different quantities,
+not just different data. **Dataset 1 was therefore re-evaluated under
+balanced accuracy too** — LR and MLP by deterministic reproduction (same
+"no retraining needed" property already established in P-006: seeded
+federated training is bit-identical on rerun, so this is re-evaluation of
+the same trained models under a second metric, not a new experiment); VQC
+from the existing n=2 saved-parameter sample (`results/angle_capture/
+arm4_{100,0.1}_{0,5}_0.npz`), the same lower-powered substitute already used
+in P-007 in place of an unauthorized ~14-hour full retrain (the 50-replicate
+VQC composition-decomposition artifacts, `results/arm4_partial/*.json` and
+`results/vqc_composition_partial/*.json`, store only accuracy/F1/AUROC
+summary scalars, not raw predictions or parameters — insufficient to derive
+balanced accuracy without retraining). Full comparison table (plain vs.
+balanced accuracy, all three models, both decomposition and shared-test) in
+`docs/dataset2_decomposition.md`.
+
+---
+
+## P-013 · 2026-08-28 — Balanced accuracy alone did not fix dataset 2: both models are constant classifiers everywhere; class-weighted training added, reversing part of P-011
+
+**What happened after P-011:** running the full K=4/K=130 grid under balanced
+accuracy produced bit-identical LR and MLP numbers at every single α/K pair
+(e.g. both exactly 0.0pp decline at α=100→1.0, both exactly 2.0pp at
+α=100→0.5 for K=4, both exactly 21.0pp at α=100→0.1). Investigated before
+writing anything up: re-ran MLP the same way LR was checked in P-011 (up to
+2,000 epochs of centralized full-batch training on real fold data) — MLP
+**also** converges to a genuine constant "always predict not-readmitted"
+classifier, identically to LR. Balanced accuracy correctly neutralizes
+composition sensitivity where an evaluation slice contains both classes (a
+constant classifier scores a flat, uninformative 0.5 there, by construction)
+— but at extreme skew, single-class slices have no defined balanced accuracy
+and fall back to plain accuracy, which *is* composition-sensitive. Since
+neither model has a genuine training-driven residual (exactly 0.0pp at
+every α/K pair, not merely small), 100% of every observed decline reported
+under P-011's methodology was this single-class-slice fallback mechanism —
+identical between LR and MLP because both are the same constant function.
+The decomposition was vacuous: with no training effect at any K, the
+pre-registered prediction (P-009) — composition share growing from K=4 to
+K=130 — is untestable, since there was no room for it to grow from (already
+100% at K=4).
+
+**Decision, made before any weighted-training result was seen:** add
+standard inverse-frequency ("balanced": w_c = n / (n_classes · n_c))
+sample weighting to the gradient, recomputed fresh inside `fit()` from that
+call's own `y` — new classes `WeightedLogisticRegressionModel` /
+`WeightedMLPModel` (`scripts/models_weighted.py`), **not** an edit to
+`models.py`/`models_mlp.py` in place, so every existing dataset-1 result
+(Arms 1–5, D-001 through D-052, the paper draft) is untouched and still
+traceable to the original unweighted implementation. This reverses part of
+P-011 ("no interface change beyond dataset 1's existing capability") —
+logged as a reversal, not a silent amendment, since the earlier call turned
+out to be insufficient once measured rather than merely being a different
+preference.
+
+**Verification gate, run before committing to the full grid (per
+instruction):** centralized fit on one real fold, both models. LR:
+`pred_pos_rate` 0.65 (was 0.00), balanced accuracy 0.551. MLP: `pred_pos_rate`
+0.48–0.41 depending on epoch budget, balanced accuracy 0.513 at 100 epochs
+rising to ~0.58 (AUROC ~0.61) by 500–2,000 epochs. Both non-constant and
+meaningfully above the 0.50 floor — gate passed, proceeding with the full
+grid under the SAME protocol as before (20 rounds, 5 local epochs, no
+learning-rate/architecture/feature changes, per the hard-stop condition).
+
+**Condition attached, also honored:** dataset 1's LR/MLP composition
+decomposition and shared-test estimate re-run a third time under weighted
+training (reusing P-011's `dataset1_reeval_balanced.py` machinery
+unchanged, only the model factory swapped to the weighted classes) so all
+three states — original unweighted/plain-accuracy (D-047/D-049), unweighted/
+balanced-accuracy (P-011), weighted/balanced-accuracy (this decision) — are
+reported side by side for full traceability. VQC is untouched (not
+requested, and dataset 1's target is close to balanced already).
+
+**Hard stop, not exercised:** if weighted models had remained degenerate,
+the instruction was to fall back to reporting dataset 2 as inconclusive
+without tuning learning rate, architecture, or features to force a working
+model. Not needed here — the gate passed on the first attempt.
+
+Full numbers (dataset 1 three-way comparison, dataset 2 weighted K=4/K=130
+grid) in `docs/dataset2_decomposition.md`.
+
+---
+
+## P-014 · 2026-08-28 — Dataset 2 grid complete: client-count prediction confirmed on the reliable metric; decomposition does not generalize as a standalone method
+
+**What:** Full LR/MLP × K∈{4,130} × Dirichlet-α grid, class-weighted
+training, balanced-accuracy evaluation, decomposition and shared-test both
+applied, 10 seeds × 5 folds. K=130's α=0.1 cell excluded (verified
+infeasible, not attempted — see P-009/P-010). Full table in
+`docs/dataset2_decomposition.md` §2.
+
+**Pre-registered prediction (P-009): confirmed, on the metric that can be
+trusted.** The decomposition's own self-reported composition share does not
+move consistently with K (grows at α=1.0, shrinks at α=0.5, for both
+models) — but this is the decomposition's own residual becoming unstable
+(negative residual, share >100%) at specific configurations, not a real
+shrinking effect. The **shared-test-implied** composition share — computed
+the same way as P-008's dataset-1 recomputation, and already established
+there as the more trustworthy of the two — grows cleanly and substantially
+from K=4 to K=130 in **all four** matched (model, α) comparisons available
+at both client counts: LR 71–82%→93–94% (α=1.0), 73–78%→86–89% (α=0.5); MLP
+73–78%→98–99% (α=1.0), 87–91%→96–98% (α=0.5). The minimum operator's
+sensitivity to partition spread, the mechanism P-007/P-008 identified on
+dataset 1, generalizes to a second dataset and a much larger client count.
+
+**Second, unplanned finding, arguably the more important one: the
+decomposition does not generalize as a standalone method.** On dataset 1,
+LR agreed cleanly with the shared-test estimate (P-006/P-008) and only MLP
+diverged, supporting a working assumption that the decomposition is
+reliable except specifically where a model has a real training effect. On
+dataset 2, **LR itself disagrees with the shared-test estimate at 3 of 5
+measured configurations** — the decomposition's residual goes negative
+(claiming composition more than fully explains the decline) at exactly the
+points where the shared-test estimate finds a real, many-SE-from-zero
+positive training effect (e.g. LR/K=4/α=0.5: decomposition residual
+−3.10 pp vs. shared-test 1.04 pp, SE 0.24; LR/K=130/α=1.0: −4.11 pp vs.
+0.95 pp, SE 0.20). The interaction term reaches −5 to −8.7 pp in these
+rows — larger than dataset 1's entire MLP interaction (~8.5 pp, P-008) —
+and its sign is not fixed (negative at 6 of 10 rows, positive at 4),
+whereas dataset 1's interaction was uniformly positive. **The interaction
+term is a property of the (model, partition, α) configuration, not of the
+model family alone** — "LR is safe, MLP isn't" does not hold on a second
+dataset. This directly reinforces P-010's rewritten Conclusion: the
+decomposition should always be reported alongside a shared-test check, not
+as a standalone estimate.
+
+**Secondary finding from the class-weighting fix (P-013), applied to
+dataset 1 too:** LR's genuine training residual under weighted training
+moves from 0.84 pp (original, D-047) through 3.95 pp (weighted, balanced
+accuracy) — part of dataset 1's original "LR barely trains" finding was
+itself a smaller instance of the same under-incentivized-training mechanism
+dataset 2 exposed at full scale under severe class imbalance. Both LR's and
+MLP's decomposition residuals move *toward* their shared-test estimates
+under weighting, not away — noted, not chased further; out of this task's
+scope.
+
+**What this does not test, restated:** no natural-partition arm is possible
+(P-009, no per-record hospital ID); `A-003`'s natural-partition α ≈ 1.5
+remains a dataset-1-only finding, neither confirmed nor challenged here.
+Balanced accuracies achieved (LR ~0.55, MLP ~0.51–0.58) are modest and not a
+claim about clinical model quality — no hyperparameter tuning was performed
+(hard-stop condition honored).
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and

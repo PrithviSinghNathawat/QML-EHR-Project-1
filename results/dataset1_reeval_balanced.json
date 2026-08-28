@@ -1,0 +1,53 @@
+{
+  "LR": {
+    "plain_accuracy": {
+      "observed_decline_pp": 4.67,
+      "composition_only_decline_pp": 3.83,
+      "composition_share_pct": 82.0,
+      "residual_pp": 0.84,
+      "shared_test_pooled_decline_pp": -0.26,
+      "shared_test_worst_group_decline_pp": -0.38
+    },
+    "balanced_accuracy": {
+      "observed_decline_pp": 5.91,
+      "composition_only_decline_pp": 5.78,
+      "composition_share_pct": 97.9,
+      "residual_pp": 0.12,
+      "shared_test_pooled_decline_pp": -0.09,
+      "shared_test_worst_group_decline_pp": -0.13
+    }
+  },
+  "MLP": {
+    "plain_accuracy": {
+      "observed_decline_pp": 18.46,
+      "composition_only_decline_pp": 5.0,
+      "composition_share_pct": 27.1,
+      "residual_pp": 13.46,
+      "shared_test_pooled_decline_pp": 4.62,
+      "shared_test_worst_group_decline_pp": 4.95
+    },
+    "balanced_accuracy": {
+      "observed_decline_pp": 16.39,
+      "composition_only_decline_pp": 7.4,
+      "composition_share_pct": 45.2,
+      "residual_pp": 8.99,
+      "shared_test_pooled_decline_pp": 5.03,
+      "shared_test_worst_group_decline_pp": 4.08
+    }
+  },
+  "VQC": {
+    "n": 2,
+    "plain_accuracy": {
+      "observed_decline_pp": 16.37,
+      "composition_only_decline_pp": 12.57,
+      "composition_share_pct": 76.7,
+      "residual_pp": 3.81
+    },
+    "balanced_accuracy": {
+      "observed_decline_pp": 32.39,
+      "composition_only_decline_pp": 22.58,
+      "composition_share_pct": 69.7,
+      "residual_pp": 9.8
+    }
+  }
+}

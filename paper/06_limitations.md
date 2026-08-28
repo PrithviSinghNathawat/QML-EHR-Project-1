@@ -20,3 +20,28 @@
   key. Any client structure for this dataset is necessarily synthetic (Dirichlet), not
   a real institutional partition, unlike the heart-disease dataset's 4 processed sites.
   See `docs/dataset2_characterization.md` and P-009.
+- **The composition-decomposition method does not generalize as a
+  standalone estimate.** On dataset 1, logistic regression agreed with an
+  independent shared-test check and only the MLP diverged (P-008),
+  suggesting the decomposition might be reliable except where a model has
+  a genuine training effect. On dataset 2 (P-014), logistic regression
+  itself disagrees with the shared-test estimate at 3 of 5 measured
+  configurations — including cases where the decomposition's residual is
+  negative while the shared-test estimate finds a real, many-standard-
+  error-from-zero positive training effect. The interaction term between
+  the two methods is a property of the specific (model, partition, α)
+  configuration, not of model family alone, and can take either sign. The
+  decomposition should always be reported alongside a shared-test check,
+  not used standalone. See `docs/dataset2_decomposition.md`.
+- **Dataset 2's classical models required class-weighted training to learn
+  anything at all.** Under dataset 1's original unweighted training
+  objective, both LR and MLP converge to a constant "always predict
+  majority class" classifier at 8.8% positive prevalence (verified to
+  2,000 epochs) — not an artifact of insufficient training. Balanced
+  accuracy alone corrects the resulting evaluation-metric degeneracy only
+  where an evaluation slice contains both classes; single-class slices
+  (common at extreme skew) still fall back to plain accuracy. Reported
+  dataset-2 results use inverse-frequency class weighting during training
+  in addition to balanced accuracy at evaluation (P-011, P-013);
+  dataset-1 numbers reported for comparison use the same weighting for
+  consistency, alongside the original unweighted figures for traceability.

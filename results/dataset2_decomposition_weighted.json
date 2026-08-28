@@ -1,0 +1,446 @@
+{
+  "LR_K4": {
+    "summary": {
+      "100_to_1.0": {
+        "observed_decline_pp": 0.8,
+        "composition_only_decline_pp": 0.65,
+        "composition_share_pct": 80.6,
+        "decomposition_residual_pp": 0.16,
+        "shared_test_pooled_decline_pp": 0.14,
+        "shared_test_pooled_se_pp": 0.07,
+        "shared_test_worst_group_decline_pp": 0.23,
+        "shared_test_worst_group_se_pp": 0.1,
+        "implied_composition_range_pp": [
+          0.57,
+          0.66
+        ],
+        "implied_composition_share_range_pct": [
+          71.1,
+          82.4
+        ],
+        "interaction_range_pp": [
+          -0.08,
+          0.01
+        ],
+        "n": 50
+      },
+      "100_to_0.5": {
+        "observed_decline_pp": 3.89,
+        "composition_only_decline_pp": 6.99,
+        "composition_share_pct": 179.6,
+        "decomposition_residual_pp": -3.1,
+        "shared_test_pooled_decline_pp": 1.04,
+        "shared_test_pooled_se_pp": 0.24,
+        "shared_test_worst_group_decline_pp": 0.86,
+        "shared_test_worst_group_se_pp": 0.24,
+        "implied_composition_range_pp": [
+          2.85,
+          3.03
+        ],
+        "implied_composition_share_range_pct": [
+          73.2,
+          77.8
+        ],
+        "interaction_range_pp": [
+          -4.14,
+          -3.96
+        ],
+        "n": 50
+      },
+      "100_to_0.1": {
+        "observed_decline_pp": 16.14,
+        "composition_only_decline_pp": 21.04,
+        "composition_share_pct": 130.4,
+        "decomposition_residual_pp": -4.9,
+        "shared_test_pooled_decline_pp": 3.79,
+        "shared_test_pooled_se_pp": 0.25,
+        "shared_test_worst_group_decline_pp": 3.53,
+        "shared_test_worst_group_se_pp": 0.28,
+        "implied_composition_range_pp": [
+          12.35,
+          12.61
+        ],
+        "implied_composition_share_range_pct": [
+          76.5,
+          78.1
+        ],
+        "interaction_range_pp": [
+          -8.69,
+          -8.43
+        ],
+        "n": 50
+      }
+    },
+    "partition_attempts": {
+      "100": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "1.0": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "0.5": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "0.1": [
+        2,
+        4,
+        1,
+        3,
+        1,
+        2,
+        3,
+        3,
+        3,
+        2
+      ]
+    },
+    "alphas_run": [
+      100,
+      1.0,
+      0.5,
+      0.1
+    ]
+  },
+  "LR_K130": {
+    "summary": {
+      "100_to_1.0": {
+        "observed_decline_pp": 14.84,
+        "composition_only_decline_pp": 18.94,
+        "composition_share_pct": 127.7,
+        "decomposition_residual_pp": -4.11,
+        "shared_test_pooled_decline_pp": 0.95,
+        "shared_test_pooled_se_pp": 0.2,
+        "shared_test_worst_group_decline_pp": 1.03,
+        "shared_test_worst_group_se_pp": 0.21,
+        "implied_composition_range_pp": [
+          13.81,
+          13.89
+        ],
+        "implied_composition_share_range_pct": [
+          93.1,
+          93.6
+        ],
+        "interaction_range_pp": [
+          -5.14,
+          -5.06
+        ],
+        "n": 50
+      },
+      "100_to_0.5": {
+        "observed_decline_pp": 29.52,
+        "composition_only_decline_pp": 23.81,
+        "composition_share_pct": 80.6,
+        "decomposition_residual_pp": 5.72,
+        "shared_test_pooled_decline_pp": 4.19,
+        "shared_test_pooled_se_pp": 0.16,
+        "shared_test_worst_group_decline_pp": 3.19,
+        "shared_test_worst_group_se_pp": 0.16,
+        "implied_composition_range_pp": [
+          25.34,
+          26.34
+        ],
+        "implied_composition_share_range_pct": [
+          85.8,
+          89.2
+        ],
+        "interaction_range_pp": [
+          1.53,
+          2.53
+        ],
+        "n": 50
+      }
+    },
+    "partition_attempts": {
+      "100": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "1.0": [
+        2,
+        2,
+        3,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        1
+      ],
+      "0.5": [
+        909,
+        75,
+        852,
+        28,
+        506,
+        682,
+        46,
+        102,
+        642,
+        15
+      ]
+    },
+    "alphas_run": [
+      100,
+      1.0,
+      0.5
+    ]
+  },
+  "MLP_K4": {
+    "summary": {
+      "100_to_1.0": {
+        "observed_decline_pp": 0.99,
+        "composition_only_decline_pp": 0.87,
+        "composition_share_pct": 88.2,
+        "decomposition_residual_pp": 0.12,
+        "shared_test_pooled_decline_pp": 0.22,
+        "shared_test_pooled_se_pp": 0.08,
+        "shared_test_worst_group_decline_pp": 0.27,
+        "shared_test_worst_group_se_pp": 0.1,
+        "implied_composition_range_pp": [
+          0.72,
+          0.77
+        ],
+        "implied_composition_share_range_pct": [
+          72.6,
+          77.7
+        ],
+        "interaction_range_pp": [
+          -0.15,
+          -0.1
+        ],
+        "n": 50
+      },
+      "100_to_0.5": {
+        "observed_decline_pp": 3.25,
+        "composition_only_decline_pp": 3.92,
+        "composition_share_pct": 120.6,
+        "decomposition_residual_pp": -0.67,
+        "shared_test_pooled_decline_pp": 0.44,
+        "shared_test_pooled_se_pp": 0.12,
+        "shared_test_worst_group_decline_pp": 0.28,
+        "shared_test_worst_group_se_pp": 0.12,
+        "implied_composition_range_pp": [
+          2.81,
+          2.96
+        ],
+        "implied_composition_share_range_pct": [
+          86.5,
+          91.3
+        ],
+        "interaction_range_pp": [
+          -1.11,
+          -0.95
+        ],
+        "n": 50
+      },
+      "100_to_0.1": {
+        "observed_decline_pp": 15.71,
+        "composition_only_decline_pp": 13.71,
+        "composition_share_pct": 87.2,
+        "decomposition_residual_pp": 2.0,
+        "shared_test_pooled_decline_pp": 1.38,
+        "shared_test_pooled_se_pp": 0.26,
+        "shared_test_worst_group_decline_pp": 0.8,
+        "shared_test_worst_group_se_pp": 0.27,
+        "implied_composition_range_pp": [
+          14.33,
+          14.91
+        ],
+        "implied_composition_share_range_pct": [
+          91.2,
+          94.9
+        ],
+        "interaction_range_pp": [
+          0.62,
+          1.21
+        ],
+        "n": 50
+      }
+    },
+    "partition_attempts": {
+      "100": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "1.0": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "0.5": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "0.1": [
+        2,
+        4,
+        1,
+        3,
+        1,
+        2,
+        3,
+        3,
+        3,
+        2
+      ]
+    },
+    "alphas_run": [
+      100,
+      1.0,
+      0.5,
+      0.1
+    ]
+  },
+  "MLP_K130": {
+    "summary": {
+      "100_to_1.0": {
+        "observed_decline_pp": 12.23,
+        "composition_only_decline_pp": 13.89,
+        "composition_share_pct": 113.6,
+        "decomposition_residual_pp": -1.67,
+        "shared_test_pooled_decline_pp": 0.26,
+        "shared_test_pooled_se_pp": 0.12,
+        "shared_test_worst_group_decline_pp": 0.15,
+        "shared_test_worst_group_se_pp": 0.14,
+        "implied_composition_range_pp": [
+          11.97,
+          12.08
+        ],
+        "implied_composition_share_range_pct": [
+          97.9,
+          98.8
+        ],
+        "interaction_range_pp": [
+          -1.92,
+          -1.81
+        ],
+        "n": 50
+      },
+      "100_to_0.5": {
+        "observed_decline_pp": 26.89,
+        "composition_only_decline_pp": 20.64,
+        "composition_share_pct": 76.7,
+        "decomposition_residual_pp": 6.26,
+        "shared_test_pooled_decline_pp": 1.21,
+        "shared_test_pooled_se_pp": 0.26,
+        "shared_test_worst_group_decline_pp": 0.62,
+        "shared_test_worst_group_se_pp": 0.22,
+        "implied_composition_range_pp": [
+          25.68,
+          26.27
+        ],
+        "implied_composition_share_range_pct": [
+          95.5,
+          97.7
+        ],
+        "interaction_range_pp": [
+          5.05,
+          5.64
+        ],
+        "n": 50
+      }
+    },
+    "partition_attempts": {
+      "100": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "1.0": [
+        2,
+        2,
+        3,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        1
+      ],
+      "0.5": [
+        909,
+        75,
+        852,
+        28,
+        506,
+        682,
+        46,
+        102,
+        642,
+        15
+      ]
+    },
+    "alphas_run": [
+      100,
+      1.0,
+      0.5
+    ]
+  }
+}
