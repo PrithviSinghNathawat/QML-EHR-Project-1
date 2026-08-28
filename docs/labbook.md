@@ -1431,6 +1431,61 @@ P-015. Holding again -- writing only, from here.
 
 ---
 
+## 2026-08-28 (continued) — Reconciling the paper with the diagnostic-pair reframing
+
+**Pulled main first, as instructed.** Prithvi's side had done far more than expected
+since I last pulled: a full shared-test validation (P-006/P-007) that corroborated the
+composition decomposition for LR/VQC but found MLP's magnitude disputed 3x; a
+recomputation (P-008) showing composition actually dominates all three model families
+once training effect is pinned to the shared-test estimate, not just LR/VQC; a second
+dataset (Diabetes 130-US Hospitals, P-009) acquired, characterised, and found to have
+no per-record hospital identifier at all; a metric crisis (P-011/P-013) where both
+classical models turned out to be constant classifiers on dataset 2 under the original
+protocol, fixed with class-weighted training; a full dataset-2 grid (P-014) confirming
+the client-count prediction AND finding that the decomposition doesn't generalize as a
+standalone method (LR itself disagrees with the shared-test estimate 3 of 5 times); and
+a full paper reframing (P-015) around this — the contribution is now the diagnostic
+pair (agreement=trust, disagreement=a measured interaction term), not the decomposition
+as a validated correction.
+
+**This session's actual task:** P-015 itself flagged three sections (§II-B, §IV.A,
+§VII) as not yet reconciled with its own rewrite. Read `docs/shared_test_validation.md`,
+`docs/dataset2_characterization.md`, and P-011/P-013/P-014/P-015 in full before touching
+anything, plus verified the specific implementation details (`scripts/
+dataset2_preprocessing.py`) rather than assuming "first-encounter-per-patient
+filtering" meant what it sounded like -- confirmed `load_first_encounter()` really
+does keep exactly one row per patient (101,766 -> 71,518), and confirmed the
+near-zero-variance filter's actual threshold (>=99%) from the same file rather than
+guessing from the characterization doc's proposal language.
+
+**§II-B, §IV.A, §VII rewritten** per the specific instructions given (full detail in
+A-004): disparity established as prior art first, then composition share stated across
+all three model families (not "two of three," which Flag 7 had already caught as
+stale); dataset 2's provenance/filtering/metric-departure/no-hospital-ID added to
+§IV.A; §VII's decomposition caveat upgraded from a theoretical first-order limitation
+to the now-measured (model, partition, α)-not-model-family finding, explicitly scoped
+as a limitation of one estimator, not a verdict on the paper.
+
+**Tone check, done as its own pass across the whole draft, not just the three named
+sections:** looked specifically for language framing the work itself as a failure,
+as distinct from negative results reported as findings. Found nothing needing a
+change outside the three sections just edited -- P-015's own explicit, instructed
+framing sentence in the Abstract/Conclusion ("we did not end up with a validated
+correction... reported as the finding, not as a setback") already does exactly what
+was asked, and is not something to soften further per its own note. Worth recording
+that a "did we already get this right" check can be a real, useful pass even when it
+turns up nothing to change -- confirms Task 2's instruction was already satisfied
+elsewhere, rather than assuming it must have been missed somewhere.
+
+**Genuinely surprising part:** how much had happened between one pull and the next.
+The shared-test validation alone (P-006-P-008) fundamentally inverted the paper's own
+headline claim (from "MLP is the one real training effect" to "composition dominates
+all three, and the interaction term itself is the finding"), and I'd been about to
+write §II-B/§IV.A/§VII against my own stale mental model from before that pull if I
+hadn't re-read everything fresh first.
+
+---
+
 ## 2026-08-28 (continued) — Closing the last placeholders: alpha calibration, partition sizes, and an honest audit
 
 Three small, fast tasks to close remaining paper placeholders. All ran in
