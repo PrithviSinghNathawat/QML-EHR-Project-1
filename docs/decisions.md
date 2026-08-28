@@ -2126,3 +2126,66 @@ substantial seed-to-seed variance at alpha=1.0 specifically (std=0.1049 against 
 0.2018, ~52% coefficient of variation). Not smoothed into a falsely precise-looking number.
 
 ---
+
+## A-004 · 2026-08-28 — Reconciled paper_draft_v2.md §II-B, §IV.A, §VII with the diagnostic-pair reframing (P-015); resolved Flags 7-8
+
+**What:** P-015 rewrote the paper's Abstract, §I Contributions, and §VIII Conclusion
+around the diagnostic-pair framing (composition dominates all three model families
+under the shared-test estimate; the interaction term is a property of (model,
+partition, α), not model family) and added §V.F's cross-dataset table, but explicitly
+flagged (its own draft Flags 7-8) that §II-B, §IV.A, and §VII still reflected the
+older framing. Closed both flags this pass.
+
+**§II-B (Related Work, client-level disparity):** previously stated the disparity was
+"largely attributable to evaluation composition for two of three model families" and
+called q-FFL's own exposure to the same confound merely "potential." Rewritten to:
+establish client-level disparity as prior art first; state that our decomposition
+suggests a substantial composition share across all three model families (matching
+§V.A/§V.F, not the stale "two of three"); and state q-FFL's own client-local
+matching-skew sweep is structurally exposed to the same confound we identify --
+framed explicitly as an exposure we identified, not an error we measured, since we
+have not quantified their composition share.
+
+**§IV.A (Experimental Setup, Dataset):** added the second dataset's description,
+previously entirely absent from this section despite §V.F already using it. Covers:
+first-encounter-per-patient filtering (101,766 raw encounters -> 71,518, one row per
+patient, preventing a repeat-visit leakage class the first archive doesn't have);
+the near-zero-variance filter (drop if one value's share >=99%) added alongside the
+existing >=85%-availability rule, needed because 15 of 23 medication columns are
+99-100% a single value; the resulting 24-feature retained set; the class-weighted-
+training + balanced-accuracy departure from the first archive's protocol (both
+models converge to a constant classifier under the original unweighted/plain-
+accuracy setup at this dataset's 11.16% positive rate, verified to 2,000 epochs,
+not an undertraining artifact); and the absence of any per-record hospital
+identifier in the public release (confirmed by inspecting all 50 columns directly),
+meaning no natural-partition arm is possible for this dataset.
+
+**§VII (Limitations):** the "decomposition is first-order" bullet previously stated
+the interaction-term caveat as a theoretical limitation, written before that
+interaction was ever measured. Rewritten to state the now-measured finding directly:
+the interaction is a property of the specific (model, partition, α) configuration,
+not of model family -- demonstrated by logistic regression (the "safe" family on
+dataset 1) diverging from the shared-test estimate at 3 of 5 dataset-2
+configurations, sometimes exceeding dataset 1's entire MLP interaction. Scoped
+explicitly, per instruction, as a bounded limitation of the decomposition as a
+standalone estimator, not a verdict on the paper's contribution -- the shared-test
+estimate, which does not share this failure mode, remains the recommended primary
+evaluation.
+
+**Tone check (requested across the whole draft, not just these three sections):**
+scanned Abstract, Contributions, Conclusion, §V.A, §V.F, and §VI for language
+describing the work itself as having failed, as distinct from negative/null results
+reported as findings. Found the existing draft already consistent with the intended
+tone -- the Abstract/Conclusion's explicit "we did not end up with a validated
+correction... reported as the finding, not as a setback" sentence states a null
+result plainly without characterizing the work as unsuccessful, and this was
+P-015's own deliberate, instructed choice, not something to soften further. The
+three sections edited this pass were written to match: §II-B reports the
+composition share as something the decomposition "suggests," not a verdict; §VII's
+strongest statement is scoped explicitly to "the decomposition as a standalone
+estimator." No failure-toned language found elsewhere, and none introduced.
+
+**Not touched:** §V.F itself (table + surrounding prose) -- already consistent with
+this framing when P-015 wrote it, and outside this pass's given scope.
+
+---
