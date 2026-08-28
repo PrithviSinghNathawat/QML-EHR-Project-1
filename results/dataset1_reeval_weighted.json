@@ -1,0 +1,38 @@
+{
+  "LR": {
+    "plain_accuracy": {
+      "observed_decline_pp": 11.37,
+      "composition_only_decline_pp": 2.13,
+      "composition_share_pct": 18.8,
+      "residual_pp": 9.24,
+      "shared_test_pooled_decline_pp": 2.55,
+      "shared_test_worst_group_decline_pp": 2.89
+    },
+    "balanced_accuracy": {
+      "observed_decline_pp": 9.29,
+      "composition_only_decline_pp": 5.34,
+      "composition_share_pct": 57.4,
+      "residual_pp": 3.95,
+      "shared_test_pooled_decline_pp": 3.27,
+      "shared_test_worst_group_decline_pp": 3.31
+    }
+  },
+  "MLP": {
+    "plain_accuracy": {
+      "observed_decline_pp": 12.47,
+      "composition_only_decline_pp": 3.41,
+      "composition_share_pct": 27.3,
+      "residual_pp": 9.06,
+      "shared_test_pooled_decline_pp": 2.11,
+      "shared_test_worst_group_decline_pp": 2.61
+    },
+    "balanced_accuracy": {
+      "observed_decline_pp": 12.63,
+      "composition_only_decline_pp": 6.79,
+      "composition_share_pct": 53.7,
+      "residual_pp": 5.85,
+      "shared_test_pooled_decline_pp": 2.86,
+      "shared_test_worst_group_decline_pp": 2.97
+    }
+  }
+}

@@ -86,6 +86,10 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | P-007 | 2026-08-22 | Mean-vs-minimum hypothesis for the MLP gap tested and rejected; residual needs explicit caveat |
 | P-008 | 2026-08-28 | Composition split recomputed under shared-test estimate: dominant for all 3 families; MLP gap named as ~8.5pp model-partition interaction |
 | P-009 | 2026-08-28 | Dataset 2 (Diabetes 130-US Hospitals) characterised: no per-record hospital ID exists; classical-only, Dirichlet-only client plan proposed |
+| P-010 | 2026-08-28 | Paper draft (v2) rewritten: composition dominates all three model families, MLP range + interaction reported explicitly |
+| P-011 | 2026-08-28 | Metric for dataset 2: balanced accuracy (pre-registered before dataset-2 results seen), applied retroactively to dataset 1 too |
+| P-013 | 2026-08-28 | Balanced accuracy alone insufficient: both models constant classifiers everywhere; class-weighted training added, reverses part of P-011 |
+| P-014 | 2026-08-28 | Dataset 2 grid: client-count prediction confirmed (shared-test-implied share); decomposition does not generalize as a standalone method (LR now disagrees too) |
 | A-001 | 2026-08-22 | Evaluation-composition confound: literature check -- largely unaddressed in the field (q-FFL's own Table 10 exposed too) |
 | A-002 | 2026-08-22 | plots.py completed against full Arm 1-5 results; composition-decomposition figure added (primary result) |
 | A-003 | 2026-08-22 | Natural-partition alpha via TV distance: 1.5 (CI 1.0-4.7) -- diverges from D-037's informal "~0.5-1.0", not yet reconciled |

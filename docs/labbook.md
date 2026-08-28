@@ -1320,3 +1320,84 @@ Characterisation only, per instruction -- no partitioning, no training run.
 Holding before any second-dataset experiment.
 
 ---
+
+## 2026-08-28 (continued) — Paper rewrite, then the dataset 2 run turned into two real bugs found in sequence
+
+**Paper draft first.** Asked to rewrite the abstract, V-A and conclusion of
+"paper_draft_v1.md" around the stronger P-008 finding. That exact filename
+doesn't exist anywhere in this repo or git history -- found it (and a v2)
+in Downloads via a background `find`. v2 is 10 minutes newer, has 5 fewer
+unfilled placeholders, and already fixed a real numeric error in the VQC
+row that v1 still has (7.30/8.55pp vs the correct 7.25/8.50pp, from the
+placeholder-review session logged earlier this week). Edited v2, not v1 --
+editing the named file literally would have reintroduced an already-fixed
+error -- and said so plainly rather than silently substituting. Flagged (as
+Flag 7, in the draft's own review-flag convention) that the Introduction
+and Related Work sections still say "two of three" and now read
+inconsistently with the rewritten Abstract/V-A/Conclusion, since fixing
+those wasn't in the instructed scope.
+
+**Then dataset 2.** First-encounter-per-patient filter: 71,518 remain (from
+101,766), positive rate drops 11.16% -> 8.80%, confirming the repeat-patient
+leakage was real. Near-zero-variance filter needed alongside missingness
+(15 of 23 medication columns >99% one value, 2 literally constant) -- 24
+features retained.
+
+**Bug 1: piloted before committing to the full grid, good thing.** Plain
+0.5-threshold accuracy at 8.8% prevalence made both models look like
+"100% composition, 0% training" at every alpha -- because the model
+converges to a genuine constant "always predict NO" classifier (checked
+by running LR to 2,000 epochs on real fold data; its own max predicted
+probability *fell* with more training, 0.45->0.18 -- not undertrained, that
+IS the optimum here). Asked Prithvi how to handle it rather than picking a
+fix myself, since it's a real protocol question. Got: balanced accuracy,
+eval only, plus re-evaluate dataset 1 under the same metric for a fair
+cross-dataset comparison, logged as its own P- decision before seeing any
+dataset-2 number (P-011).
+
+**Bug 2: the fix looked like it worked, then didn't.** Full grid under
+balanced accuracy gave LR and MLP *bit-identical* numbers at every single
+alpha/K pair. Investigated instead of just reporting it -- re-ran MLP the
+same 2,000-epoch check as LR, found MLP is ALSO a constant classifier.
+Balanced accuracy correctly zeroes out composition sensitivity when an
+eval slice has both classes, but single-class slices (common at extreme
+skew) fall back to plain accuracy, and since neither model had any real
+training effect at all, that fallback was 100% of everything being
+measured -- identical between models because they're the same function.
+Asked again rather than silently reversing scope myself. Got: add
+class-weighted training after all (inverse-frequency, inside fit(), new
+classes in models_weighted.py so models.py/models_mlp.py and every
+existing dataset-1 result stay untouched), verify it actually works on one
+model before running the full grid, apply to dataset 1 too, hard-stop and
+report inconclusive if it's still degenerate. Verification pilot: LR
+balanced acc 0.551 (was 0.50 exactly), MLP 0.513 rising to ~0.58 with more
+epochs -- both genuinely non-constant. Gate passed, ran the real grid.
+
+**What came out the other end, once the models actually worked:**
+- The pre-registered client-count prediction (P-009) is confirmed, but
+  only on the reliable statistic. The decomposition's OWN share doesn't
+  move consistently with K (grows at alpha=1.0, shrinks at alpha=0.5) --
+  that's the decomposition's residual going unstable (negative, >100%
+  share), not a real effect. The shared-test-implied share grows cleanly
+  in all 4 matched K=4-vs-K=130 comparisons for both models.
+- Bigger, unplanned finding: the decomposition does NOT generalize as a
+  standalone method. On dataset 1, LR agreed with shared-test and only MLP
+  didn't. On dataset 2, LR disagrees too, at 3 of 5 configurations,
+  sometimes with a residual that goes negative while shared-test finds a
+  real 4-26-SE-from-zero training effect. The interaction term isn't a
+  property of "which model family" -- it's a property of the specific
+  (model, partition, alpha) combination, and it can go either sign. This
+  is a stronger, more useful result than a clean confirmation would have
+  been.
+- Weighting also changed dataset 1's own numbers in a way worth keeping:
+  LR's genuine residual moved from 0.84pp (original) to 3.95pp (weighted) --
+  some of "LR barely trains" was itself the same under-incentivized-by-
+  imbalance mechanism, just smaller, since dataset 1's target isn't that
+  imbalanced.
+
+Two stop-and-ask decisions in a row, both real (not hedge-my-bets)
+questions -- glad I didn't guess on either, since the second fix looked
+identical to a working one until checked directly. Logged as P-011, P-013,
+P-014. Holding now -- per instruction, the rest is writing.
+
+---
