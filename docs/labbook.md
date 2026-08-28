@@ -1430,3 +1430,48 @@ second dataset the way the new results section now assumes. Logged as
 P-015. Holding again -- writing only, from here.
 
 ---
+
+## 2026-08-28 (continued) — Closing the last placeholders: alpha calibration, partition sizes, and an honest audit
+
+Three small, fast tasks to close remaining paper placeholders. All ran in
+seconds to low minutes, as expected going in.
+
+Alpha calibration (P-016): the old estimate (A-003, alpha~1.5 CI 1.0-4.7)
+used one statistic on 4 grid points with 10 seeds. Redid it properly --
+25-point log grid, 30 seeds each, both TV distance and Jensen-Shannon
+divergence, both client-weighted mean and unweighted max. Good news: it
+maps cleanly onto a range, doesn't fall outside the tested grid anywhere.
+Real nuance though -- mean-based statistics say alpha~1.5-1.7, max-based
+(driven by the single worst client) say alpha~1.0. Reported both rather
+than picking one, since that's an actual finding (typical client vs.
+worst client read slightly differently), not noise to average away. Made
+a figure (results/figs/alpha_calibration_fine.png) -- two panels, natural
+partition and its equivalent-alpha CI marked on both.
+
+Partition sizes (P-017): computed K=4 and K=130 test partition sizes for
+dataset 2 using the exact same seeds/assignment calls as P-014's actual
+grid, so these describe the real partitions the results came from, not a
+fresh draw. Found the thing worth flagging loudly: K=130 produces cells
+with literally zero test rows (1 of 6500, at two different alphas) --
+worse than dataset 1's already-small n=1 tail case. Checked that
+worst_client_acc correctly skips empty groups rather than erroring or
+scoring them as a failure -- it does. Put this in Limitations prominently
+and tied it explicitly back to the Section V.F headline claim, since that
+claim depends on exactly this K=130/high-skew regime.
+
+Placeholder audit (P-018): grepped for every remaining [[ ]] marker in
+paper_draft_v2.md. 14 hits, but most are either resolved-and-left-as-a-
+review-trail-note or purely informational sourcing tags. Four are
+genuinely open and need Prithvi's own call before submission: the
+"six predictions, four contradicted" claim in SSI doesn't match what's
+actually in the decision log (Flag 2), citation [13] is a COVID-19 study
+that doesn't match its claimed dataset family (Flag 4), the A2G-QFL
+description in SSII-E covers only half their actual contribution (Flag
+3), and the feature-exclusion sensitivity analysis genuinely doesn't
+exist anywhere in the repo (Flag 6, tracked since D-014, never built --
+that one needs new experimental work, explicitly out of scope today).
+
+Logged as P-016, P-017, P-018. No further experiments, per instruction --
+holding now.
+
+---
