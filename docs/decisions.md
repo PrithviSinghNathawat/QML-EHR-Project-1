@@ -1928,6 +1928,57 @@ claim about clinical model quality — no hyperparameter tuning was performed
 
 ---
 
+## P-015 · 2026-08-28 — Paper reframed around the diagnostic pair, not the decomposition, per P-014's finding
+
+**What:** P-014 showed that LR — the model family that "worked" cleanly with
+the decomposition on dataset 1 — disagrees with the shared-test estimator at
+3 of 5 dataset-2 configurations, sometimes with a negative residual against
+a real, many-SE-from-zero shared-test effect. That makes the decomposition
+untrustworthy as a standalone method, not just imprecise for one model
+family. Per instruction, rewrote `paper_draft_v2.md`'s Abstract, §I
+Contributions, and §VIII Conclusion around this: **the contribution is the
+diagnostic pair (agreement = trust, disagreement = warning about an
+unisolated interaction term), not the decomposition alone.** Added a new
+§V.F with a single consolidated table covering both datasets, all three
+model families, both estimators, and both client counts (15 rows: 3
+dataset-1 headline rows + 10 real dataset-2 rows + 2 explicit
+"structurally infeasible" rows for K=130/α=0.1, not omitted).
+
+**Framing choices, stated plainly per instruction — not softened:**
+- The client-count result is stated prominently in the Abstract's second
+  half and Contribution 3: shared-test-implied composition share for the
+  MLP rises **73–78% → 98–99%** from K=4 to K=130, meaning the confound is
+  largest in exactly the many-client regime most federated learning studies
+  actually use — not a small-scale artifact of this project's own 4-5
+  client convenience.
+- The practical recommendation is now explicit and directional: **prefer
+  shared-test evaluation** (already standard practice per NIID-Bench [6],
+  and the more stable estimator across both datasets tested here); where
+  client-local evaluation under a swept heterogeneity protocol cannot be
+  avoided, report both estimators and treat divergence as a warning, not
+  noise to average away.
+- The honest framing sentence is in the Abstract and Conclusion verbatim,
+  not implied: *"We set out to propose a decomposition... We did not end
+  up with a validated correction. We end up instead with a diagnostic
+  pair... which we report as the finding, not as a setback to be
+  minimised."* Per instruction, this was not softened into a hedge.
+
+**New citation added:** [17], the Diabetes 130-US Hospitals UCI entry
+(Clore et al. 2014) and its source publication (Strack et al. 2014), for
+§V.F's table.
+
+**Not touched, flagged instead (Flag 7 updated, Flag 8 added in the
+draft's own review-flag section):** §II-B's Related Work discussion still
+says "two of three model families" (§I's Contributions list, which said
+the same thing, was fixed by this pass since it was being rewritten
+anyway — §II-B was not in scope for either this pass or the prior one).
+§IV.A's dataset description and §VII's Limitations do not yet carry a
+companion paragraph/entry for the second dataset — the project's internal
+`paper/06_limitations.md` already has the equivalent entry, but the draft
+document itself does not yet.
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and
