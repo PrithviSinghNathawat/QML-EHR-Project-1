@@ -94,6 +94,8 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | P-016 | 2026-08-28 | Fine-grid, dual-statistic alpha calibration (TV+JS, mean+max, 25pt grid, 30 seeds) supersedes A-003; natural partition maps to alpha 1.0-1.7 |
 | P-017 | 2026-08-28 | Dataset 2 per-client test partition sizes, K=4 and K=130: worst cases n=2 (K=4) and zero-row cells (K=130) flagged in Limitations |
 | P-018 | 2026-08-28 | Placeholder audit of paper_draft_v2.md: 4 substantive [[ ]] items remain open (Flags 2/3/4/6), rest resolved or informational |
+| P-019 | 2026-08-28 | Minimum-partition-size robustness check: raw decomposition share NOT robust in 5/7 configs; shared-test-based headline claim unaffected |
+| P-020 | 2026-08-28 | Canonical paper draft moved from shared Downloads copy into paper/paper_draft_v2.md (git-tracked); coordination risk logged |
 | A-001 | 2026-08-22 | Evaluation-composition confound: literature check -- largely unaddressed in the field (q-FFL's own Table 10 exposed too) |
 | A-002 | 2026-08-22 | plots.py completed against full Arm 1-5 results; composition-decomposition figure added (primary result) |
 | A-003 | 2026-08-22 | Natural-partition alpha via TV distance: 1.5 (CI 1.0-4.7) -- diverges from D-037's informal "~0.5-1.0", not yet reconciled |

@@ -1530,3 +1530,67 @@ Logged as P-016, P-017, P-018. No further experiments, per instruction --
 holding now.
 
 ---
+
+## 2026-08-28 (continued) — Minimum-partition-size check, flag cleanup, and moving the paper into the repo
+
+Three items, meant to be the last before writing resumes for real.
+
+Robustness check (P-019) first, since it was the substantive one. The
+worry was specific: the K=4 worst case is n=2 test samples, and that
+feeds every composition-share number the paper leans on. Re-analysed
+already-computed data (no retraining -- dataset 1's observed curves and
+VQC's composition-only curve were already saved per-client in existing
+CSVs/JSONs; only dataset 1 LR/MLP's composition-only curve and dataset
+2's curves needed a deterministic re-run to capture per-client detail
+that wasn't kept the first time) under a threshold sweep (0/5/10/15/20)
+rather than picking one number.
+
+Result was not what I'd have guessed going in: the RAW decomposition's
+own composition-share number is NOT robust for 5 of 7 configurations.
+Heart disease LR is the worst case -- it doesn't just drift, it collapses
+to -174.6% at threshold=20 because both curves shrink toward zero
+together and a ratio of two near-zero numbers stops meaning anything.
+Only VQC (dataset 1) and LR at K=4 (dataset 2) hold steady. Genuinely
+glad this got checked directly instead of staying a caveat -- "n=2 exists
+somewhere in the tail" reads very differently from "the headline
+decomposition number swings 250 points depending on an arbitrary
+cutoff."
+
+The good news, and it IS good news, not just damage control: the paper's
+actual headline claim was never built on this fragile number. It uses
+the shared-test-IMPLIED composition share, which is a mean over pooled
+accuracy, not a minimum over skewed per-client partitions -- structurally
+immune to exactly this instability. So this check doesn't overturn
+anything the paper claims; it turns a methodological choice that was
+already made (prefer shared-test) into something with direct evidence
+behind it, on top of the reasoning that was already there. Wrote this up
+carefully so it reads as "we checked and the thing we already suspected
+is even more true than we knew," not as walking anything back. Added a
+new SSV-G with the full table, and pointer sentences from SSV-A and SSV.F
+so nobody reads the raw decomposition-share columns as trustworthy
+without also seeing this.
+
+Flag cleanup (Task 2) was mechanical by comparison. Flag 2: swapped the
+unverifiable "six predictions" claim for the two that are actually
+logged as pre-registered (D-048/D-049, P-009/P-014) -- both confirmed,
+which is a different and more honest story than "largely refuted."
+Flag 4: verified [13] against its real source (it's a genuine COVID-19
+Brazilian-hospitals paper, not miscited, just misapplied to a claim
+about "this dataset family") -- fixed the sentence to scope it correctly
+instead of dropping a real citation. Flag 6: cut instead of caveated,
+since a feature-ablation study doesn't belong in an evaluation-protocol
+paper's scope at all. Left Flag 3 alone, explicitly noted as Ayuvi's.
+
+File relocation (Task 3): copied the full current draft into
+paper/paper_draft_v2.md in the repo, replaced the Downloads copy with a
+short pointer note instead of deleting it. Logged the coordination
+near-miss plainly (P-020) -- it worked out this time only because my
+edits and Ayuvi's session's edits happened not to overlap section by
+section; a shared local file has no merge protection the way git does,
+and docs/decisions.md's own conflict from this same session is the proof
+that git-tracked files survive exactly this collision cleanly while a
+shared Downloads copy would not have.
+
+Holding now. No further experiments -- what's left is writing.
+
+---
