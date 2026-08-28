@@ -1,0 +1,331 @@
+{
+  "D1_LR": {
+    "0": {
+      "observed_decline_pp": 4.666,
+      "composition_only_decline_pp": 3.825,
+      "composition_share_pct": 82.0,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "5": {
+      "observed_decline_pp": 3.988,
+      "composition_only_decline_pp": 3.187,
+      "composition_share_pct": 79.9,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "10": {
+      "observed_decline_pp": 2.698,
+      "composition_only_decline_pp": 1.386,
+      "composition_share_pct": 51.4,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "15": {
+      "observed_decline_pp": 1.399,
+      "composition_only_decline_pp": 0.196,
+      "composition_share_pct": 14.0,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "20": {
+      "observed_decline_pp": 0.431,
+      "composition_only_decline_pp": -0.753,
+      "composition_share_pct": -174.6,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    }
+  },
+  "D1_MLP": {
+    "0": {
+      "observed_decline_pp": 18.462,
+      "composition_only_decline_pp": 4.998,
+      "composition_share_pct": 27.1,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "5": {
+      "observed_decline_pp": 17.841,
+      "composition_only_decline_pp": 4.251,
+      "composition_share_pct": 23.8,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "10": {
+      "observed_decline_pp": 15.843,
+      "composition_only_decline_pp": 2.687,
+      "composition_share_pct": 17.0,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "15": {
+      "observed_decline_pp": 15.521,
+      "composition_only_decline_pp": 1.184,
+      "composition_share_pct": 7.6,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "20": {
+      "observed_decline_pp": 14.218,
+      "composition_only_decline_pp": 0.349,
+      "composition_share_pct": 2.5,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    }
+  },
+  "D1_VQC": {
+    "0": {
+      "observed_decline_pp": 7.251,
+      "composition_only_decline_pp": 8.493,
+      "composition_share_pct": 117.1,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "5": {
+      "observed_decline_pp": 7.251,
+      "composition_only_decline_pp": 8.493,
+      "composition_share_pct": 117.1,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "10": {
+      "observed_decline_pp": 5.768,
+      "composition_only_decline_pp": 6.739,
+      "composition_share_pct": 116.8,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "15": {
+      "observed_decline_pp": 3.997,
+      "composition_only_decline_pp": 4.797,
+      "composition_share_pct": 120.0,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "20": {
+      "observed_decline_pp": 2.373,
+      "composition_only_decline_pp": 3.604,
+      "composition_share_pct": 151.9,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    }
+  },
+  "D2_LR_K4": {
+    "0": {
+      "observed_decline_pp": 16.136,
+      "composition_only_decline_pp": 21.037,
+      "composition_share_pct": 130.4,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "5": {
+      "observed_decline_pp": 14.966,
+      "composition_only_decline_pp": 20.346,
+      "composition_share_pct": 135.9,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "10": {
+      "observed_decline_pp": 13.542,
+      "composition_only_decline_pp": 18.417,
+      "composition_share_pct": 136.0,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "15": {
+      "observed_decline_pp": 13.304,
+      "composition_only_decline_pp": 18.041,
+      "composition_share_pct": 135.6,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "20": {
+      "observed_decline_pp": 13.304,
+      "composition_only_decline_pp": 18.041,
+      "composition_share_pct": 135.6,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    }
+  },
+  "D2_MLP_K4": {
+    "0": {
+      "observed_decline_pp": 15.712,
+      "composition_only_decline_pp": 13.708,
+      "composition_share_pct": 87.2,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "5": {
+      "observed_decline_pp": 14.995,
+      "composition_only_decline_pp": 12.489,
+      "composition_share_pct": 83.3,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "10": {
+      "observed_decline_pp": 14.033,
+      "composition_only_decline_pp": 11.089,
+      "composition_share_pct": 79.0,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "15": {
+      "observed_decline_pp": 13.188,
+      "composition_only_decline_pp": 9.747,
+      "composition_share_pct": 73.9,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "20": {
+      "observed_decline_pp": 13.188,
+      "composition_only_decline_pp": 9.747,
+      "composition_share_pct": 73.9,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    }
+  },
+  "D2_LR_K130": {
+    "0": {
+      "observed_decline_pp": 29.524,
+      "composition_only_decline_pp": 23.806,
+      "composition_share_pct": 80.6,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "5": {
+      "observed_decline_pp": 27.931,
+      "composition_only_decline_pp": 19.616,
+      "composition_share_pct": 70.2,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "10": {
+      "observed_decline_pp": 27.489,
+      "composition_only_decline_pp": 15.578,
+      "composition_share_pct": 56.7,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "15": {
+      "observed_decline_pp": 25.0,
+      "composition_only_decline_pp": 14.779,
+      "composition_share_pct": 59.1,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "20": {
+      "observed_decline_pp": 24.803,
+      "composition_only_decline_pp": 14.233,
+      "composition_share_pct": 57.4,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    }
+  },
+  "D2_MLP_K130": {
+    "0": {
+      "observed_decline_pp": 26.892,
+      "composition_only_decline_pp": 20.635,
+      "composition_share_pct": 76.7,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "5": {
+      "observed_decline_pp": 23.167,
+      "composition_only_decline_pp": 15.775,
+      "composition_share_pct": 68.1,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "10": {
+      "observed_decline_pp": 21.627,
+      "composition_only_decline_pp": 11.963,
+      "composition_share_pct": 55.3,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "15": {
+      "observed_decline_pp": 18.347,
+      "composition_only_decline_pp": 9.701,
+      "composition_share_pct": 52.9,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    },
+    "20": {
+      "observed_decline_pp": 17.402,
+      "composition_only_decline_pp": 8.493,
+      "composition_share_pct": 48.8,
+      "n_valid_hi": 50,
+      "n_total_hi": 50,
+      "n_valid_lo": 50,
+      "n_total_lo": 50
+    }
+  }
+}

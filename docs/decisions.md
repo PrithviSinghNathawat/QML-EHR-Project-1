@@ -2094,6 +2094,109 @@ claim) or new experimental work explicitly out of scope for this session
 
 ---
 
+## P-019 · 2026-08-28 — Minimum-partition-size robustness check: raw decomposition share is NOT robust in 5 of 7 configurations; shared-test-based headline claim unaffected
+
+**What:** the K=4 worst case (n=2 test samples) feeds every reported
+composition share, so it needed a direct robustness check, not only a
+caveat. Re-analysed already-computed predictions — no retraining — under
+a minimum-test-partition-size filter excluding (seed, fold, α, client)
+cells below a threshold from the worst-client minimum, swept across five
+thresholds (0, 5, 10, 15, 20) rather than committing to one arbitrary
+cutoff. Per-client accuracy/size data for dataset 1's observed curve
+(`results/diagnostic_results.csv`, `results/arm4_diagnostic_results.csv`)
+and dataset 1 VQC's composition-only curve
+(`results/vqc_composition_partial/*.json`) already existed, no retraining
+needed; dataset 1 LR/MLP's composition-only curve and dataset 2's both
+curves (K=4, K=130) were not persisted per-client the first time and were
+obtained by deterministic reproduction of the exact already-frozen
+recipe (same seeds/protocol/models) — consistent with this project's
+established "deterministic reproduction is not retraining" precedent
+(P-006/P-007). `scripts/partition_size_robustness.py`,
+`results/partition_size_robustness.json`.
+
+**Result — reported plainly, per instruction, not softened:**
+
+| dataset/model/K | share t=0 | t=5 | t=10 | t=15 | t=20 | robust? |
+|---|---|---|---|---|---|---|
+| D1 LR (K=4) | 82.0% | 79.9% | 51.4% | 14.0% | **−174.6%** | **No** |
+| D1 MLP (K=4) | 27.1% | 23.8% | 17.0% | 7.6% | 2.5% | **No** |
+| D1 VQC (K=4) | 117.1% | 117.1% | 116.8% | 120.0% | 151.9% | yes (to t=15) |
+| D2 LR (K=4) | 130.4% | 135.9% | 136.0% | 135.6% | 135.6% | yes |
+| D2 MLP (K=4) | 87.2% | 83.3% | 79.0% | 73.9% | 73.9% | partial |
+| D2 LR (K=130) | 80.6% | 70.2% | 56.7% | 59.1% | 57.4% | **No** |
+| D2 MLP (K=130) | 76.7% | 68.1% | 55.3% | 52.9% | 48.8% | **No** |
+
+**The raw decomposition's own composition-share number is not robust in
+5 of 7 configurations.** Where it moves, it moves monotonically downward
+as the threshold rises (more training effect visible once tiny, noisy
+partitions are excluded) — D1 LR collapses most severely, becoming
+numerically unstable and sign-flipping at t=20 because both its observed
+decline (4.67pp→0.43pp) and composition-only decline (3.83pp→−0.75pp)
+shrink toward zero together, and a ratio of two near-zero quantities is
+not a stable statistic. D1 MLP moves an order of magnitude (27.1%→2.5%)
+in the same direction the shared-test estimate has argued for all along.
+Only D1 VQC and D2 LR (K=4) hold their value within a few points across
+the full sweep.
+
+**Does not overturn the paper's headline claim.** The Abstract/§V.A's
+"composition dominates all three families" claim rests on the
+**shared-test-implied** share, not the raw decomposition share tested
+here — and the shared-test estimate is structurally immune to this
+instability, since its primary statistic (pooled accuracy) is a mean
+over the full held-out set, not a minimum over skewed client partitions.
+This check makes that pre-existing methodological choice's justification
+concrete: the raw decomposition share is now shown to be fragile to an
+unrelated nuisance parameter (minimum partition size) in most
+configurations, independent evidence beyond the one disagreement
+(dataset-1 MLP) that first exposed it.
+
+**Robust to the threshold is not the same as correct, stated explicitly
+so this isn't misread as vindication of the raw decomposition:** D2 LR
+(K=4) holds a stable ~130–136% share across every threshold, yet stays
+far from the shared-test-implied share for the same configuration
+(76.5%) at every one of them. Filtering the tail sometimes narrows the
+decomposition/shared-test gap (D1 MLP, D2 K=130) and sometimes leaves it
+essentially unchanged (D2 LR K=4) — it is not a general fix.
+
+**Paper updated:** new §V-G in `paper/paper_draft_v2.md` with the full
+table and analysis; one-sentence pointers added to §V-A's and §V.F's
+table intros noting the raw decomposition-share column's instability and
+directing to the columns the paper's actual claims are built on.
+
+---
+
+## P-020 · 2026-08-28 — Canonical paper draft moved into the repository; shared-Downloads-file coordination risk logged
+
+**What:** both Prithvi's and Ayuvi's sessions independently edited the
+same `C:\Users\91911\Downloads\paper_draft_v2.md` in the same window this
+session (this session's P-016/P-017/P-018 alongside Ayuvi's concurrent
+A-004) — it resolved cleanly only because the two sets of edits happened
+not to overlap section-by-section. That file has no version control and
+no merge protection; a future collision could silently overwrite one
+side's work with no trace, unlike this repo's git-tracked `docs/`, where
+an identical concurrent-edit situation (this session's push conflicting
+with A-004's) was caught and merged safely by git itself.
+
+**Fix:** the full draft (all sections, current as of P-019's edits) is
+now committed at `paper/paper_draft_v2.md` — version-controlled,
+mergeable, diffable, with the same conflict-resolution tooling already
+used successfully on `docs/decisions.md` and `docs/labbook.md` available
+if both sessions edit it concurrently again. The old Downloads file is
+left in place but replaced with a short pointer note directing to the
+new location, rather than deleted, so an old bookmark or habit surfaces
+the redirect instead of stale content.
+
+**Not addressed, flagged instead:** the pre-existing `paper/01-07_*.md`
+scaffold files (`paper/02_related_work.md` and `paper/06_limitations.md`
+actively maintained; the other five are still near-empty stubs) are a
+second, different representation of overlapping content that this
+decision does not reconcile with the newly-relocated full draft. Two
+parallel paper artifacts now exist in-repo; deciding whether to merge
+them, deprecate one, or keep both for different purposes is a separate
+question, not resolved here.
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and
