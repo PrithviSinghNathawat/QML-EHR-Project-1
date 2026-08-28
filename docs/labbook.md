@@ -1594,3 +1594,61 @@ shared Downloads copy would not have.
 Holding now. No further experiments -- what's left is writing.
 
 ---
+
+## 2026-08-28 (continued) — Building the Review-2 deck: template inspection, a Windows tooling detour, and three overflow bugs
+
+**Given the actual VIT Review-2 `.pptx` template** (the user provided it after I asked
+rather than guessing at institutional branding). Inspected it via `markitdown` and a
+thumbnail render before touching anything -- found the standard VIT/SCOPE format: 13
+slides, an admin "get guide approval by email" instruction slide (not a content slide),
+and mostly plain title+bullet layouts with a literature-review table and an
+Objectives slide carrying SDG/TRL graphics.
+
+**Tooling detour, resolved quickly:** the pptx skill's thumbnail/soffice scripts are
+Linux-sandbox-specific (a Unix-domain-socket shim `AttributeError: module 'socket' has
+no attribute 'AF_UNIX'` on both), and LibreOffice itself isn't installed on this
+machine. Checked for Microsoft Office instead (registry) -- it's installed. Used
+PowerPoint COM automation via PowerShell for the entire build: duplicating slides via
+`Slide.Duplicate()` preserves template formatting exactly (more reliably than
+OOXML unzip/edit for this environment), and `Presentation.Export` substitutes cleanly
+for the skill's usual PNG-thumbnail QA step.
+
+**Built 22 slides mapped explicitly to the 12 given criteria** (full breakdown in
+A-005), reusing template slides where their existing structure fit (Title, Aim,
+Abstract, Objectives, Literature Review, Research Gap, Framework, Experiments and
+Results, Conclusion, References) and duplicating a generic donor for the rest
+(Dataset/Tools/Hardware, Implementation Status, Demonstration Plan, 3 more Results
+slides, Limitations, Progress, Documentation, Individual Contribution). Deleted the
+admin approval-email slide -- not a content slide, not one of the 12 criteria.
+
+**New figures, from committed code:** a client-count composition-share bar chart
+(`scripts/plot_client_count.py`, reading P-014's own `dataset2_decomposition_weighted.json`
+directly -- no new computation) and two schematic diagrams for methodology
+(`scripts/plot_deck_diagrams.py`: the federated loop, and the diagnostic-pair method) --
+both kept separate from Prithvi's actively-evolving `plots.py` deliberately.
+
+**Visual QA -- actually looked at every rendered slide, not just checked the build
+log for errors -- found three real overflow bugs:** the Objectives slide's bullets
+overlapped its SDG/TRL images (only ~190pt of room before the images start, confirmed
+by direct shape-geometry inspection rather than eyeballing); the Abstract and
+Limitations slides ran text past the footer. Fixed by shortening text and reducing
+font size on the affected placeholders specifically. A fourth issue -- the SDG/TRL
+label line rendering behind its own image -- turned out to be the template's fragile
+single-line, space-padded, pipe-separated label breaking under any text-length change;
+fixed properly by replacing it with three independently positioned text boxes rather
+than re-padding spaces by trial and error. Re-exported and re-inspected after every
+fix, not just after the first one.
+
+**Left honestly incomplete rather than fabricated:** registration numbers and the
+faculty guide's name -- neither exists anywhere in this repository (`README.md`
+itself says "Guide: (to be added)"). Marked `<<TO FILL>>` and flagged to the user
+directly, matching how the paper draft's own gaps were handled earlier.
+
+**Genuinely surprising part:** how much the "obvious" approach (follow the pptx
+skill's documented OOXML workflow) would have fought this specific environment. The
+skill's own tooling assumes a sandbox without real Office installed; this machine has
+the opposite problem (real PowerPoint, no LibreOffice) -- checking what was actually
+available before committing to an approach saved a lot of wasted effort fighting
+Linux-only shims.
+
+---
