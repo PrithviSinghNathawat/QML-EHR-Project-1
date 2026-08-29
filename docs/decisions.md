@@ -2489,3 +2489,72 @@ estimator." No failure-toned language found elsewhere, and none introduced.
 this framing when P-015 wrote it, and outside this pass's given scope.
 
 ---
+
+## A-005 · 2026-08-28 — Review-2 deck built on VIT template, mapped to all 12 grading criteria
+
+**What:** Built a 22-slide Review-2 presentation deck directly onto the VIT-supplied
+`.pptx` template (`4 Review 2 PPT Template.pptx`), via PowerPoint COM automation
+(PowerShell) rather than the usual OOXML unzip/edit approach -- LibreOffice-based
+tooling in this session's environment is Linux-sandbox-specific (Unix-domain-socket
+shim, confirmed via a direct AttributeError) and unavailable on this Windows machine,
+but real Microsoft PowerPoint is installed, so COM automation was used instead: it
+guarantees valid output (real PowerPoint writes the file) and preserves the template's
+own formatting exactly when duplicating slides, which was verified directly against
+the schema/relationship validator used elsewhere in this project's tooling (all
+structural checks passed against the original template as baseline).
+
+**Structure:** deleted the template's "get guide email approval by 01-09-2026" admin
+instruction slide (not a content slide, not one of the 12 criteria). Duplicated the
+template's plain title+content donor slide 11 times, and its table-bearing Literature
+Review slide once, to reach 22 total slides covering: title+objectives, literature
+survey (2 slides, "not more than 2" per the template's own note) + research gap,
+methodology + system architecture (2 slides, both figure-only), dataset/tools/software/
+hardware, implementation status, a demonstration plan (the 5 items requested: live
+partitioner, circuit diagram, one live federated run, results/runs.csv traceability,
+the decomposition figure), 4 results slides (confound explained in plain language,
+cross-dataset/three-model finding, client-count result, recommendation + comparison
+with existing work), limitations (its own slide, not scattered, not leading), progress
+toward the expected outcome, conclusion, documentation and source code, references, and
+individual contribution (a table with real `git log` commit counts and active-date
+ranges per contributor, verifiable directly against the public repository).
+
+**New figures built for this deck** (all from committed code, none hand-drawn):
+`scripts/plot_client_count.py` -- a bar chart of the shared-test-implied composition
+share by client count (K=4 vs K=130), reading `results/dataset2_decomposition_weighted.json`
+directly (P-014's own numbers, no new computation); `scripts/plot_deck_diagrams.py` --
+two schematic diagrams (the federated loop; the diagnostic-pair method) for the
+methodology slides, since "text-light, figure-heavy" ruled out a bullet-only
+architecture slide. Both are deliberately separate from `scripts/plots.py` (Prithvi's
+actively-evolving pipeline module) to avoid touching a shared file for one-off deck
+assets.
+
+**Visual QA found and fixed three real overflow bugs**, via full-deck PNG export
+(PowerPoint COM `Presentation.Export`, the Windows-native substitute for this
+environment's unavailable LibreOffice-based thumbnail/soffice QA scripts) and
+per-slide inspection, not just a successful build log: the Objectives slide's bullet
+text overlapped its SDG/TRL images (that slide has only ~190pt of vertical room before
+the images start, found by direct shape-geometry inspection, not guessed); the
+Abstract and Limitations slides had text running past the footer; the SDG/TRL label
+line itself broke a second time after a text-length change, because the template's
+single-line, space-padded, pipe-separated label is fragile to any edit -- replaced
+with three independently positioned text boxes instead of continuing to fight the
+padding. Fixed by shortening text, reducing font size on the affected placeholders
+specifically (not globally), and repositioning the label boxes; re-exported and
+re-inspected after each fix rather than assuming a fix worked.
+
+**Known minor cosmetic item, not fixed:** the two literature-survey tables (built via
+`Shapes.AddTable`, since the template's visible table grid turned out to be baked into
+the slide LAYOUT rather than an editable per-slide table object -- confirmed via
+`shape.HasTable` returning false on an empty placeholder) have slightly uneven row
+spacing from `AddTable`'s default row-height behavior. No content is cut off or
+missing; flagged rather than spending further effort chasing pixel-perfect table row
+heights, which is trivial to adjust by hand in PowerPoint if wanted.
+
+**Left as explicit placeholders, not fabricated:** registration numbers and the
+faculty guide's name. Neither exists anywhere in this repository (`README.md` itself
+says "Guide: (to be added)") -- flagged to the user rather than invented.
+
+**Not committed to this repo:** the built `.pptx` deck itself, delivered directly to
+the user (same handling as the paper draft, which also lives outside the repo).
+
+---

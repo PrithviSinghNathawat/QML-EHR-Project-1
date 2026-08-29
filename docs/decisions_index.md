@@ -101,3 +101,4 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | A-002 | 2026-08-22 | plots.py completed against full Arm 1-5 results; composition-decomposition figure added (primary result) |
 | A-003 | 2026-08-22 | Natural-partition alpha via TV distance: 1.5 (CI 1.0-4.7) -- diverges from D-037's informal "~0.5-1.0", not yet reconciled |
 | A-004 | 2026-08-28 | Reconciled paper draft SS II-B/IV.A/VII with the diagnostic-pair framing (P-015); resolved Flags 7-8; tone check |
+| A-005 | 2026-08-28 | Review-2 deck built on VIT template via PowerPoint COM, mapped to all 12 grading criteria; 3 overflow bugs found and fixed |
