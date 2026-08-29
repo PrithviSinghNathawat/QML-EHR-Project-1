@@ -1594,3 +1594,51 @@ shared Downloads copy would not have.
 Holding now. No further experiments -- what's left is writing.
 
 ---
+
+## 2026-08-28 (continued) — P-019's "structurally immune" claim was wrong, and got caught
+
+Got called out on this, correctly. §V-G's original text said the
+shared-test-implied share is "structurally immune" to the partition-size
+instability because its numerator doesn't move with the threshold. True
+as far as it goes -- but I never checked the denominator, which is the
+SAME worst-client-minimum statistic that collapsed for heart disease LR
+in the raw decomposition. I asserted immunity instead of demonstrating
+it. Should have caught this myself before writing "structurally immune"
+in a section whose entire point is not trusting an unverified claim.
+
+Recomputed properly: shared-test-implied share across the same threshold
+sweep, using the already-fixed shared-test training-effect numbers
+against the observed-decline values I'd already computed for P-019 (pure
+arithmetic, no new run needed). Six of seven configurations ARE stable
+(move 10 points or less) -- genuinely good news, not just walked back.
+But heart disease LR is not: 105.6% -> 160.3% across the sweep. Doesn't
+collapse into nonsense the way the raw decomposition did for the same
+config (-174.6%), but it's a real ~55-point drift, not a flat line.
+
+Worked out why algebraically rather than just reporting the numbers:
+share = 100 - 100*(TE/observed), and as observed shrinks toward zero
+under filtering while TE stays fixed and nonzero, the ratio necessarily
+drifts -- bounded only if TE is exactly zero, which it never is. Heart
+disease LR has the smallest observed decline of any of the seven
+configs to begin with (4.67pp, barely above this project's own noise
+floor) and it's the one where this mechanism actually bites within the
+range tested. Worth remembering: this is a property of the ratio near a
+near-zero training effect, not something wrong with either estimator --
+and nothing here says the other six wouldn't eventually show the same
+thing at a threshold beyond what I tested (capped at 20).
+
+Corrected SSV-G in place (removed the wrong claim, added both new
+tables, gave each configuration its own interpretable/not verdict
+instead of one blanket line), fixed the two pointer sentences in SSV-A
+and SSV.F that repeated the same overclaim. Flagged plainly, not
+resolved: LR's dataset-1 composition-share range (101-106%) in the
+Abstract/SSI/SSV-A is now known to be the low end of an unstable
+statistic, not a stable point -- how to reframe that language is
+Prithvi's call, didn't touch it without being told to. The paper's
+actual cross-model claim isn't threatened -- MLP, VQC, and all of
+dataset 2 stay comfortably above 67% at every threshold -- only LR's
+specific number needs revisiting.
+
+Logged as P-021. Holding again.
+
+---

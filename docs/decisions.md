@@ -2197,6 +2197,88 @@ question, not resolved here.
 
 ---
 
+## P-021 · 2026-08-28 — P-019's "structurally immune" claim was wrong: shared-test-implied share destabilises too, for heart disease LR specifically
+
+**What prompted this:** P-019's §V-G asserted the shared-test-implied
+composition share is structurally immune to the minimum-partition-size
+instability found in the raw decomposition share, because its numerator
+(the shared-test training effect) is threshold-invariant. Challenged
+directly, correctly: share = (observed − TE)/observed, and **observed is
+the same worst-client-minimum statistic, computed on the same small
+partitions, that destabilised the raw decomposition share** — a stable
+numerator does not rescue an unstable denominator. The original claim
+was asserted, not demonstrated, and was wrong to assert.
+
+**What was done:** recomputed the shared-test-implied share across the
+same five-threshold sweep (0/5/10/15/20) for all seven configurations,
+using the already-available fixed shared-test training-effect values
+(threshold-invariant by construction, since they come from pooled
+accuracy on the full held-out set) against the observed-decline values
+already computed per-threshold in P-019's own data
+(`results/partition_size_robustness.json` — no new experiment, pure
+arithmetic on existing numbers). Also tabulated the raw observed
+worst-client decline by threshold directly, since that is the quantity
+that determines whether the ratio stays meaningful.
+
+**Result, per configuration, not a single blanket verdict:**
+
+| config | decomp. share t=0→t=20 | shared-test-implied share t=0→t=20 | interpretable? |
+|---|---|---|---|
+| D1 LR | 82.0% → −174.6% | 105.6% → **160.3%** | **No — both destabilise** |
+| D1 MLP | 27.1% → 2.5% | 75.0% → 67.5% | Yes |
+| D1 VQC | 117.1% → 151.9% | 95.2% → 85.3% | Yes |
+| D2 LR K4 | 130.4% → 135.6% | 76.5% → 71.5% | Yes |
+| D2 MLP K4 | 87.2% → 73.9% | 91.2% → 89.5% | Yes |
+| D2 LR K130 | 80.6% → 57.4% | 85.8% → 83.1% | Yes |
+| D2 MLP K130 | 76.7% → 48.8% | 95.5% → 93.0% | Yes |
+
+**The shared-test-implied share destabilises for exactly one
+configuration: heart disease LR.** It moves from 105.6% (t=0) to 160.3%
+(t=20) — not a collapse into nonsensical territory the way the raw
+decomposition did for the same config (−174.6%), but a genuine ~55-point
+drift, not the "structurally immune" flat line originally claimed. Every
+other configuration's shared-test-implied share is stable (moves ≤10
+points across the full sweep) — categorically different from the raw
+decomposition share's 20-to-250+-point movement on the same five
+configurations already known to be non-robust.
+
+**Mechanism, algebraic, not estimator-specific:** share = 100 −
+100·(TE/observed). As the threshold rises and observed shrinks toward
+zero, this ratio is bounded only if TE is exactly zero, which never
+happens exactly. Heart disease LR had the smallest observed decline of
+any configuration at t=0 (4.67pp, only ~5x this project's own 0.3-1.0pp
+noise floor) and shrinks fastest in relative terms under filtering
+(91% reduction, to 0.43pp by t=20) while its shared-test TE (−0.26pp)
+stays fixed and nonzero — so the ratio is pushed further from 100% as
+the denominator vanishes. This is a property of the ratio near a
+near-zero training effect, not a flaw specific to either estimator, and
+this sweep (capped at threshold=20) does not rule out the same mechanism
+eventually affecting the currently-stable configurations at a higher
+threshold.
+
+**Consequence for the headline, stated plainly, not adjusted to preserve
+the original claim:** LR's dataset-1 composition-share range (101–106%,
+Abstract/§I/§V-A) is now known to be the low end of what this statistic
+takes under a defensible robustness check, not a stable point — the
+honest reportable claim for LR is closer to "composition accounts for at
+least the full observed decline, with the exact multiple sensitive to
+partition-size filtering," not a fixed percentage range. **This is
+Prithvi's call how to reframe** the Abstract/§I/§V-A/Conclusion's
+LR-specific language — flagged in §V-G, not resolved there. **The
+paper's cross-model claim is not threatened**: MLP and VQC (dataset 1)
+and every dataset-2 configuration remain stable, all with composition
+shares comfortably ≥67% even at the most aggressive threshold tested.
+
+**Paper updated:** §V-G in `paper/paper_draft_v2.md` rewritten in full —
+the "structurally immune" claim removed, both new tables added, a
+per-configuration interpretable/not-interpretable verdict stated instead
+of a single blanket claim. The two pointer sentences added to §V-A and
+§V.F under P-019 (which repeated the "does not share that instability"
+overclaim) corrected to name LR's specific exception rather than a
+blanket "shared-test columns are safe" statement.
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and
