@@ -2279,6 +2279,57 @@ blanket "shared-test columns are safe" statement.
 
 ---
 
+## P-022 · 2026-08-28 — General 2pp reporting floor formalized in Methodology; heart disease LR (and two dataset-2 rows) switched to absolute-value reporting; client-count headline restated on the safe comparison
+
+**What:** P-021's finding — LR's 101–106% range was the low end of an
+unstable ratio, not a finding about LR — required a fix, not just a
+caveat. Per instruction: report LR in absolute terms (observed 4.66pp,
+training effect ≈0, composition ≈4.7pp — "no measurable training effect,
+observed decline small and almost entirely composition"), and add a
+**general** rule to §III-C rather than special-casing LR: composition
+share (share = 100 − 100·TE/observed) is reported only where the
+observed decline is at least 2pp, both at the unfiltered estimate and
+across any robustness sweep run for that configuration; below the
+floor, absolute values are reported instead.
+
+**Applied mechanically, not just to LR, which surfaced two more cases:**
+checking every configuration's raw (unfiltered) observed decline against
+the 2pp floor — not only the configuration already under discussion —
+found two dataset-2 rows in §V.F's table that fall below 2pp *without
+needing any robustness sweep to reveal it*: logistic regression and the
+MLP at K=4, α=100→1.0 (observed 0.80pp and 0.99pp respectively). Both
+switched to absolute reporting for consistency, since leaving them as
+percentages while fixing LR would have been the special-casing the
+instruction explicitly said not to do.
+
+**Downstream consequence, caught rather than left inconsistent:** the
+client-count-prediction headline claim (§V.F, echoed in the Abstract,
+§I Contribution 3, and §VIII) compared K=4 to K=130 at both α=1.0 and
+α=0.5. The α=1.0 side of that comparison used exactly the two
+now-flagged sub-2pp K=4 values (MLP 0.99pp, LR 0.80pp) — so citing
+"73–78% at K=4 to 98–99% at K=130" (the α=1.0 pair) as the headline
+number was built in part on a percentage the paper's own new rule says
+not to report. **Restated the claim on the α=0.5 comparison instead**,
+the one pair where both client counts (K=4 and K=130) clear the 2pp
+floor on both sides: MLP moves from 87–91% (K=4) to 96–98% (K=130). The
+α=1.0 comparison is retained in §V.F only as directional, absolute-terms
+supporting evidence, not as the cited percentage-to-percentage headline
+number anywhere in the paper.
+
+**Paper updated:** `paper/paper_draft_v2.md` — new rule in §III-C;
+§V-A's table and prose (LR row, "Composition dominates" paragraph, the
+pointer sentence) switched to absolute reporting for LR with the exact
+required sentence; §V.F's table (3 rows), pointer sentence, and the
+client-count-prediction paragraph rewritten around the α=0.5 comparison;
+§V-G's "Consequence for the headline" paragraph updated from "flagged,
+not resolved" to the resolution actually applied; the "73–78%→98–99%"
+figure replaced with "87–91%→96–98%" in the Abstract, §I Contribution 3,
+and §VIII Conclusion (three instances, all previously citing the same
+now-superseded α=1.0 comparison). Verified no other stale references to
+the old percentages remain (`grep` across the full file).
+
+---
+
 ## A-001 · 2026-08-22 — Evaluation-composition confound: literature check, largely unaddressed in the field
 
 **What:** Literature and source-code search on whether the FL literature identifies and
