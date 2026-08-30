@@ -2609,3 +2609,27 @@ says "Guide: (to be added)") -- flagged to the user rather than invented.
 the user (same handling as the paper draft, which also lives outside the repo).
 
 ---
+
+## A-006 · 2026-08-29 — System architecture diagram redrawn with orthogonal routing (user-reported overlap)
+
+**What:** The deck's "Methodology: System Architecture" figure
+(`scripts/plot_deck_diagrams.py`, A-005) used straight diagonal lines converging on a
+single center point on both the global-model and aggregate boxes. With 4 clients
+spread wider than those boxes, the lines to/from the outer clients (0 and 3) crossed
+visibly through the inner clients' text (Client 1, Client 2) -- not caught during
+A-005's own visual QA, reported by the user afterward.
+
+**Fix:** Redrawn with orthogonal ("bus") routing -- every connection is a sequence of
+horizontal/vertical segments aligned to each box's own center, never a diagonal line
+through another box. Broadcast: global model -> horizontal bus -> straight down into
+each client. Upload: each client -> straight up into a horizontal bus -> aggregate.
+Round loop-back (aggregate -> global) routed out to the far left, clear of every box,
+rather than as a center arc. No information removed -- same five boxes, same four
+arrows' worth of meaning, same caption.
+
+**Regenerated and re-verified:** `results/figs/deck_architecture_loop.png`
+regenerated from the updated script; the deck rebuilt from it and the specific slide
+re-exported and visually re-inspected before redelivering, not assumed fixed from the
+code change alone.
+
+---
