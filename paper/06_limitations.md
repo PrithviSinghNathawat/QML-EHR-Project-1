@@ -1,3 +1,7 @@
+> **Superseded — this scaffold file is not the canonical draft.**
+> The canonical, actively-maintained paper is [`paper/paper_draft_v2.md`](paper_draft_v2.md) (§VII Limitations).
+> This file's content that was not already present there (the no-natural-partition-arm-for-dataset-2 point, the class-weighted-training requirement, the D-037 non-reconciliation) was reconciled into §VII in P-023. **This file's first bullet ("Reduced feature set... reduced to 6 via PCA") describes the pre-D-021 design and is stale — dataset 1 uses 6 raw features with no PCA (§IV.A); not carried into the canonical draft.** Kept in place for its commit history, not deleted. See P-020/P-023 in `docs/decisions.md`.
+
 # 6. Limitations
 
 <!-- Append every constraint as we hit it, don't wait until the end. -->

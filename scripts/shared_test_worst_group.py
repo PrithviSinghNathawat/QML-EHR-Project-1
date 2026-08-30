@@ -20,10 +20,10 @@ flagged as lower-powered in the report.
 import sys
 
 import numpy as np
-from sklearn.metrics import accuracy_score
 
 sys.path.insert(0, "scripts")
 from aggregators import fedavg  # noqa: E402
+from composition_controlled_eval import cce_fixed_partition, cce_worst_group_accuracy  # noqa: E402
 from cv_protocol import client_assignment, cv_folds, fit_transform_fold, load_pool, split_by_client  # noqa: E402
 from federated_loop import run_federated  # noqa: E402
 from models import LogisticRegressionModel  # noqa: E402
@@ -34,25 +34,20 @@ SEEDS = list(range(10))
 FEDERATED_ROUNDS = 20
 LOCAL_EPOCHS = 5
 N_GROUPS = 4
+GROUP_BASE_SEED = 100_000  # this script's original fixed_group_assignment base -- preserved exactly
 
 
 def fixed_group_assignment(n_rows: int, seed: int, fold: int) -> np.ndarray:
     """Deterministic, alpha-independent group assignment -- same seed
     formula used for both the alpha=100 and alpha=0.1 evaluation of a
-    given (seed, fold), so the partition never varies with alpha."""
-    rng = np.random.default_rng(100_000 + seed * 100 + fold)
-    return rng.integers(0, N_GROUPS, size=n_rows)
+    given (seed, fold), so the partition never varies with alpha. Now a
+    thin wrapper over the CCE module (composition_controlled_eval.py),
+    preserving this script's original base_seed exactly."""
+    return cce_fixed_partition(n_rows, seed, fold, n_groups=N_GROUPS, base_seed=GROUP_BASE_SEED)
 
 
 def worst_group_accuracy(model, X, y, groups) -> float:
-    proba = model.predict_proba(X)
-    pred = (proba >= 0.5).astype(int)
-    accs = []
-    for g in range(N_GROUPS):
-        mask = groups == g
-        if mask.sum() > 0:
-            accs.append(accuracy_score(y[mask], pred[mask]))
-    return min(accs)
+    return cce_worst_group_accuracy(model, X, y, groups, n_groups=N_GROUPS, metric="accuracy")
 
 
 def lr_mlp_worst_group_decline(model_factory):

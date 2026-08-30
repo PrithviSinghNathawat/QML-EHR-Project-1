@@ -27,6 +27,7 @@ from sklearn.metrics import balanced_accuracy_score
 
 sys.path.insert(0, "scripts")
 from aggregators import fedavg  # noqa: E402
+from composition_controlled_eval import cce_fixed_partition, cce_pooled_accuracy, cce_worst_group_accuracy  # noqa: E402
 from dataset2_cv_protocol import (  # noqa: E402
     InfeasiblePartition,
     client_assignment,
@@ -42,6 +43,7 @@ SEEDS = list(range(10))
 ROUNDS = 20
 LOCAL_EPOCHS = 5
 N_GROUPS = 4  # fixed shared-test worst-group split, same convention as P-007
+GROUP_BASE_SEED = 200_000  # this script's original fixed_group_assignment base -- preserved exactly
 
 ALPHAS_BY_K = {
     4: [100, 1.0, 0.5, 0.1],
@@ -51,7 +53,11 @@ ALPHAS_BY_K = {
 
 def _bal_acc(y_true, y_pred) -> float:
     """balanced_accuracy_score requires both classes present; falls back to
-    plain accuracy for a degenerate single-class slice (P-011)."""
+    plain accuracy for a degenerate single-class slice (P-011). Used by
+    worst_client_acc below, which scores over this study's real
+    (heterogeneity-dependent) Dirichlet clients -- a different quantity
+    from the CCE module's fixed-partition evaluation, so it stays local
+    rather than moving into composition_controlled_eval.py."""
     if len(np.unique(y_true)) < 2:
         return float((y_true == y_pred).mean())
     return balanced_accuracy_score(y_true, y_pred)
@@ -68,23 +74,18 @@ def worst_client_acc(model, X, y, groups: dict) -> float:
 
 
 def pooled_acc(model, X, y) -> float:
-    pred = (model.predict_proba(X) >= 0.5).astype(int)
-    return _bal_acc(y, pred)
+    """Now a thin wrapper over the CCE module (composition_controlled_eval.py)."""
+    return cce_pooled_accuracy(model, X, y, metric="balanced")
 
 
 def fixed_group_assignment(n_rows: int, seed: int, fold: int) -> np.ndarray:
-    rng = np.random.default_rng(200_000 + seed * 100 + fold)
-    return rng.integers(0, N_GROUPS, size=n_rows)
+    """Now a thin wrapper over the CCE module, preserving this script's
+    original base_seed (200_000) exactly."""
+    return cce_fixed_partition(n_rows, seed, fold, n_groups=N_GROUPS, base_seed=GROUP_BASE_SEED)
 
 
 def worst_group_acc(model, X, y, groups: np.ndarray) -> float:
-    accs = []
-    for g in range(N_GROUPS):
-        mask = groups == g
-        if mask.sum() > 0:
-            pred = (model.predict_proba(X[mask]) >= 0.5).astype(int)
-            accs.append(_bal_acc(y[mask], pred))
-    return min(accs) if accs else float("nan")
+    return cce_worst_group_accuracy(model, X, y, groups, n_groups=N_GROUPS, metric="balanced")
 
 
 def run_config(model_name: str, K: int, factory_fn):

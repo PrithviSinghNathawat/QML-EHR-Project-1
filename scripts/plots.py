@@ -127,9 +127,13 @@ def _plot_vs_alpha(df, value_col, series_cols, title, ylabel, out_path, color_ma
             # In the legend, not as floating text -- with several series close
             # together the annotated-text version overlapped illegibly and
             # ran past the axes edge at alpha=0.1.
+            # Equivalent-alpha label per P-016 (scripts/alpha_calibration_fine.py):
+            # four independent statistics converge to alpha in [1.0, 1.7], not
+            # a single point -- was "~alpha 0.5-1.0" (D-037's informal, different-
+            # quantity estimate) through A-003; corrected here, not just in prose.
             ax.axhline(
                 nat_mean, linestyle="--", color=color, alpha=0.5, linewidth=1,
-                label=f"{label} natural (~α 0.5-1.0)",
+                label=f"{label} natural (α∈[1.0,1.7], P-016)",
             )
 
     ax.set_xscale("log")

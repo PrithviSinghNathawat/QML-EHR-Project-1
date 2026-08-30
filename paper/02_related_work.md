@@ -1,3 +1,7 @@
+> **Superseded — this scaffold file is not the canonical draft.**
+> The canonical, actively-maintained paper is [`paper/paper_draft_v2.md`](paper_draft_v2.md) (§II Related Work).
+> This file's content that was not already present there (exact q-FFL/NIID-Bench/Hsu et al. figures, the FedGA and Naseer & Shoaib citations, the source-code-level splitting verification) was reconciled into §II in P-023; the parts that were already superseded elsewhere (the "two of three model families" composition framing, since revised to "all three" — P-008/P-010; the stale D-037-based natural-partition "~α 0.5–1.0" estimate, since revised — P-016) were **not** carried over. Kept in place for its commit history, not deleted. See P-020/P-023 in `docs/decisions.md`.
+
 # 2. Related Work
 
 Full literature detail and verification notes behind every claim in this
@@ -196,8 +200,10 @@ rather than outside it.
 Finally, this project measures a concrete wall-clock cost for its specific
 comparison: a 6-qubit VQC trained via PennyLane's `lightning.qubit` simulator
 with adjoint differentiation, against a parameter-matched classical MLP,
-under identical federated protocol. Arm 4's full sweep took ~13,318× the
-matched MLP's wall-clock per training run (`docs/arm4_report.md`). This is a
+under identical federated protocol. Arm 4's full sweep took ~13,300× the
+matched MLP's wall-clock per training run (`docs/arm4_report.md`; standardized
+to this rounding throughout the paper, P-023 — the underlying measurement
+does not support the extra digit of precision in "13,318×"). This is a
 simulator-only, CPU-only measurement, offered as documented cost rather than
 a claim of advantage in either direction — per this project's guardrail
 against ever presenting either model as demonstrating a quantum speedup.

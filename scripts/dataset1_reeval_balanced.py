@@ -23,6 +23,7 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score
 
 sys.path.insert(0, "scripts")
 from aggregators import fedavg  # noqa: E402
+from composition_controlled_eval import cce_fixed_partition, cce_pooled_accuracy, cce_worst_group_accuracy  # noqa: E402
 from cv_protocol import client_assignment, cv_folds, fit_transform_fold, load_pool, split_by_client  # noqa: E402
 from federated_loop import run_federated  # noqa: E402
 from models import LogisticRegressionModel  # noqa: E402
@@ -34,9 +35,14 @@ ALPHAS = [100, 1.0, 0.5, 0.1]
 ROUNDS = 20
 LOCAL_EPOCHS = 5
 N_GROUPS = 4
+GROUP_BASE_SEED = 300_000  # this script's original fixed_group_assignment base -- preserved exactly
 
 
 def worst_client_both(model, X, y, groups: dict):
+    """Worst-client accuracy over this study's real (heterogeneity-
+    dependent) Dirichlet clients -- a different quantity from the CCE
+    module's fixed-partition evaluation, so it stays local rather than
+    moving into composition_controlled_eval.py."""
     acc_list, bal_list = [], []
     for c, (Xc, yc) in groups.items():
         if len(yc) == 0:
@@ -48,25 +54,22 @@ def worst_client_both(model, X, y, groups: dict):
 
 
 def pooled_both(model, X, y):
-    pred = (model.predict_proba(X) >= 0.5).astype(int)
-    return accuracy_score(y, pred), balanced_accuracy_score(y, pred)
+    """Now two calls into the CCE module (composition_controlled_eval.py)
+    instead of one dual-metric computation -- same predict_proba inputs,
+    same fallback rule, bit-identical output, one call per metric."""
+    return (cce_pooled_accuracy(model, X, y, metric="accuracy"),
+            cce_pooled_accuracy(model, X, y, metric="balanced"))
 
 
 def fixed_group_assignment(n_rows, seed, fold):
-    rng = np.random.default_rng(300_000 + seed * 100 + fold)
-    return rng.integers(0, N_GROUPS, size=n_rows)
+    """Now a thin wrapper over the CCE module, preserving this script's
+    original base_seed (300_000) exactly."""
+    return cce_fixed_partition(n_rows, seed, fold, n_groups=N_GROUPS, base_seed=GROUP_BASE_SEED)
 
 
 def worst_group_both(model, X, y, groups):
-    acc_list, bal_list = [], []
-    for g in range(N_GROUPS):
-        mask = groups == g
-        if mask.sum() > 0:
-            pred = (model.predict_proba(X[mask]) >= 0.5).astype(int)
-            yg = y[mask]
-            acc_list.append(accuracy_score(yg, pred))
-            bal_list.append(balanced_accuracy_score(yg, pred) if len(np.unique(yg)) > 1 else accuracy_score(yg, pred))
-    return min(acc_list), min(bal_list)
+    return (cce_worst_group_accuracy(model, X, y, groups, n_groups=N_GROUPS, metric="accuracy"),
+            cce_worst_group_accuracy(model, X, y, groups, n_groups=N_GROUPS, metric="balanced"))
 
 
 def run_lr_mlp(factory_fn):
