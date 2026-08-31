@@ -104,3 +104,4 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | A-004 | 2026-08-28 | Reconciled paper draft SS II-B/IV.A/VII with the diagnostic-pair framing (P-015); resolved Flags 7-8; tone check |
 | A-005 | 2026-08-28 | Review-2 deck built on VIT template via PowerPoint COM, mapped to all 12 grading criteria; 3 overflow bugs found and fixed |
 | A-006 | 2026-08-29 | System architecture diagram redrawn with orthogonal routing, fixing lines that crossed through client boxes |
+| A-007 | 2026-08-31 | Merge conflict resolved (kept P-022's corrections); deck Results section restructured to match; stale client-count caption fixed |

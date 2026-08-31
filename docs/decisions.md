@@ -2633,3 +2633,50 @@ re-exported and visually re-inspected before redelivering, not assumed fixed fro
 code change alone.
 
 ---
+
+## A-007 · 2026-08-31 — Merge conflict resolved (kept P-022's corrections); deck Results section restructured to match, one stale citation caught
+
+**What:** `git pull` hit a force-pushed, diverged `origin/main` (12 local commits vs. 15
+remote, not overlapping) and left 4 files mid-conflict: `docs/decisions.md`,
+`docs/decisions_index.md`, `docs/labbook.md`, `paper/paper_draft_v2.md`. Resolved each
+on its own terms rather than blindly taking one side or the other everywhere.
+
+**Log files (decisions.md, decisions_index.md, labbook.md):** every conflict was
+additive -- both sides had appended new entries at the same insertion point (my side:
+A-001 through A-006; origin's side: P-022 and its labbook entry). Kept both, in order,
+per this project's append-only convention -- nothing here was a real disagreement to
+adjudicate.
+
+**paper/paper_draft_v2.md:** a genuine content conflict, 9 separate hunks. Read every
+one before resolving anything: each hunk was HEAD holding a pre-correction sentence and
+origin holding the P-021/P-022-corrected version of the same sentence (the LR
+reporting-floor fix, the client-count headline restated on the alpha=0.5 comparison,
+the corresponding Abstract/Contributions/Conclusion updates). Confirmed this pattern
+held for all 9 before resolving in bulk (`git checkout --theirs`) rather than assuming
+after the first one or two.
+
+**Deck updated to match, per instruction:** the opening results slide (was "Results:
+The Confound, Explained", a partition-shift figure) rewritten as a stat-callout slide —
+plain-language explanation, then a large "97.9%" callout ("of the 12.23pp observed
+decline, in the largest configuration tested (130 clients), is composition"), matching
+the paper's own now-legitimate single-configuration headline (that row's observed
+decline clears the 2pp floor on its own, unlike the K=4/alpha=1.0 comparison P-022
+retired). Client-count result slide kept, positioned next. The former "Recommendation
+and Comparison With Existing Work" slide renamed **Composition-Controlled Evaluation**
+and rewritten around that name as the proposed protocol, per instruction. Limitations
+kept its own slide, unchanged in position.
+
+**Caught while in there, not asked for explicitly:** the client-count slide's own
+caption was still citing the old alpha=1.0 comparison ("73–78%→98–99%") that P-022's
+correction specifically said not to cite as a percentage-to-percentage headline (the
+K=4 side falls below the 2pp floor). The underlying figure (`client_count_composition_share.png`)
+was never wrong -- it always plotted both alpha=0.5 and alpha=1.0 panels correctly --
+only this caption text was stale. Corrected to the alpha=0.5 comparison (87–91%→96–98%),
+matching the paper.
+
+**New overflow bug found and fixed the same way as A-005's:** the renamed slide's
+longer title wrapped to two lines, pushing all four bullets past the footer. Reduced
+title and body font size on that slide specifically; re-exported and re-inspected
+before redelivering, not assumed fixed from the code change alone.
+
+---

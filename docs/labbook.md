@@ -1745,3 +1745,47 @@ to make sure nothing stale was left behind -- clean.
 Logged as P-022. Holding -- writing only, from here, for real this time.
 
 ---
+
+## 2026-08-31 — A force-pushed diverged history, and updating the deck to match the paper's corrected numbers
+
+**Pulled main first, as instructed, and hit a real conflict.** `origin/main` had been
+force-pushed and diverged from local history (12 local commits, 15 remote, not the
+same ones) -- the merge left 4 files conflicted. Did not blindly re-run `git pull`
+or take one side wholesale without looking first. Checked every conflict marker by
+hand: the three log files (`decisions.md`, `decisions_index.md`, `labbook.md`) were
+all additive -- both sides had appended new entries at the same point (mine: A-001
+through A-006; origin's: P-022) -- kept both. `paper/paper_draft_v2.md` had 9 real
+content conflicts; read every single one before resolving anything, and confirmed the
+same pattern held throughout (my side = stale pre-P-022 text, origin = the corrected
+version) before resolving the whole file in bulk rather than assuming after the first
+couple of hunks matched.
+
+**Then the actual task:** the paper's client-count headline changed again since I last
+touched the deck (P-021 found "structurally immune" was asserted, not demonstrated;
+P-022 turned that into a general 2pp-reportability floor and, as a consequence, moved
+the cited client-count comparison from alpha=1.0 to alpha=0.5). Rewrote the deck's
+opening results slide as a stat-callout ("97.9%" of a 12.23pp decline at 130 clients --
+the largest configuration tested, legitimately reportable as a single number even
+though the K=4-vs-K=130 alpha=1.0 comparison specifically is not anymore), kept the
+client-count slide next, and renamed the old recommendation slide to **Composition-
+Controlled Evaluation**, rewritten around that name as the proposed protocol.
+
+**Caught by actually re-reading the deck rather than only editing the three named
+slides:** the client-count slide's own caption still cited the retired alpha=1.0
+numbers (73-78%->98-99%). The chart itself was never wrong; only its caption text had
+gone stale relative to the paper's own correction. Fixed to alpha=0.5 (87-91%->96-98%),
+matching current paper text exactly.
+
+**Also found, the same way as A-005/A-006 -- by exporting and looking, not trusting a
+clean build log:** the renamed protocol slide's longer title wrapped to two lines and
+pushed its bullets past the footer. Same fix as before: shrink the specific
+placeholder's font, don't touch the others, re-export, re-inspect.
+
+**Worth naming as a pattern now, three decisions in:** every real defect in this deck
+so far (A-005's three overflows, A-006's crossing lines, this session's stale caption)
+was caught by looking at the actual rendered output, never by reading the generating
+code and reasoning about it. The code always looked correct on inspection. Treating
+"the script ran without error" as different from "the slide is right" is the one habit
+that has caught something every single time it's been applied here.
+
+---
