@@ -97,6 +97,7 @@ prefixes: `P-001` onward for Prithvi, `A-001` onward for Ayuvi. See P-001 in
 | P-019 | 2026-08-28 | Minimum-partition-size robustness check: raw decomposition share NOT robust in 5/7 configs; shared-test-based headline claim unaffected |
 | P-020 | 2026-08-28 | Canonical paper draft moved from shared Downloads copy into paper/paper_draft_v2.md (git-tracked); coordination risk logged |
 | P-021 | 2026-08-28 | P-019's "structurally immune" claim was wrong: shared-test-implied share also destabilises, for heart disease LR specifically (105.6%->160.3%) |
+| P-022 | 2026-08-28 | General 2pp reporting floor added to Methodology; LR (+2 dataset-2 rows) switched to absolute reporting; client-count headline restated on the safe alpha=0.5 comparison |
 | A-001 | 2026-08-22 | Evaluation-composition confound: literature check -- largely unaddressed in the field (q-FFL's own Table 10 exposed too) |
 | A-002 | 2026-08-22 | plots.py completed against full Arm 1-5 results; composition-decomposition figure added (primary result) |
 | A-003 | 2026-08-22 | Natural-partition alpha via TV distance: 1.5 (CI 1.0-4.7) -- diverges from D-037's informal "~0.5-1.0", not yet reconciled |

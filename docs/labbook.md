@@ -1700,3 +1700,48 @@ specific number needs revisiting.
 Logged as P-021. Holding again.
 
 ---
+
+## 2026-08-28 (continued) — Fixing D1 LR properly: a general rule, not a special case
+
+Told plainly: the 101-160% range I'd flagged for LR wasn't a finding
+about LR at all, it was the signature of an unstable ratio, and I should
+stop treating it as a number with a value and start treating it as a
+number that shouldn't be reported. Report LR in absolute terms instead
+(4.66pp observed, ~0 training effect, ~4.7pp composition -- "no
+measurable training effect, decline small and almost entirely
+composition") and, more importantly, write the actual general rule this
+implies: don't report composition share as a percentage when the
+observed decline is small enough that the ratio isn't numerically
+trustworthy. We picked 2pp.
+
+The instruction to apply this "consistently, not as a special case" was
+the useful part, because taking it seriously meant checking every other
+number in the paper against the same floor rather than just fixing the
+one case already under discussion. Found two more: dataset 2's LR and
+MLP at K=4, alpha=100->1.0, both already under 2pp in their raw,
+unfiltered value (0.80pp and 0.99pp) -- no robustness sweep needed to
+catch these, the floor catches them directly. Fixed those too, since
+leaving them as "80.6%" and "88.2%" while fixing LR would have been
+exactly the inconsistency the instruction was about.
+
+That in turn broke something bigger: the client-count-prediction
+headline claim (the one already sitting in the Abstract, a Contribution,
+and the Conclusion -- "73-78% at K=4 to 98-99% at K=130") turned out to
+be built partly on those same two now-flagged sub-2pp values, on the
+K=4/alpha=1.0 side. Caught this myself rather than leaving it for a
+fourth round of "you need to go further" -- restated the claim on the
+alpha=0.5 comparison instead, the one pair where both client counts
+clear the floor on both sides (87-91% to 96-98%), and fixed all three
+places that cited the old number.
+
+Worth sitting with: three consecutive corrections on the same underlying
+finding (P-019 wrote the sweep, P-021 caught that "structurally immune"
+was asserted not demonstrated, P-022 turned the fix into a real rule and
+found it had a second, hidden consequence in the paper's own headline
+claim). Each one only surfaced because the prior one was checked rather
+than trusted. Grepped the whole file afterward for the old percentages
+to make sure nothing stale was left behind -- clean.
+
+Logged as P-022. Holding -- writing only, from here, for real this time.
+
+---
